@@ -1,0 +1,31 @@
+# ── Secrets & credentials — NEVER commit these ────────────────────────────
+.env
+credentials.json
+token.json
+
+# ── Python ────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Virtual environments ──────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── Logs ─────────────────────────────────────────────────────────────────
+*.log
+*.log.*
+
+# ── IDEs ──────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store

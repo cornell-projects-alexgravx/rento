@@ -71,23 +71,23 @@ def job_gmail():
 def build_scheduler() -> BlockingScheduler:
     scheduler = BlockingScheduler(timezone="America/New_York")
 
-    scheduler.add_job(
-        job_craigslist,
-        CronTrigger.from_crontab(settings.CRON_CRAIGSLIST),
-        id="craigslist",
-        name="Craigslist RSS",
-        max_instances=1,
-        misfire_grace_time=300,
-    )
+    # scheduler.add_job(
+    #     job_craigslist,
+    #     CronTrigger.from_crontab(settings.CRON_CRAIGSLIST),
+    #     id="craigslist",
+    #     name="Craigslist RSS",
+    #     max_instances=1,
+    #     misfire_grace_time=300,
+    # )
 
-    scheduler.add_job(
-        job_streeteasy,
-        CronTrigger.from_crontab(settings.CRON_STREETEASY),
-        id="streeteasy",
-        name="StreetEasy ZenRows",
-        max_instances=1,
-        misfire_grace_time=600,
-    )
+    # scheduler.add_job(
+    #     job_streeteasy,
+    #     CronTrigger.from_crontab(settings.CRON_STREETEASY),
+    #     id="streeteasy",
+    #     name="StreetEasy ZenRows",
+    #     max_instances=1,
+    #     misfire_grace_time=600,
+    # )
 
     scheduler.add_job(
         job_gmail,
@@ -119,8 +119,8 @@ def main():
 
     if args.once:
         logger.info("Running all jobs once (--once mode)…")
-        job_craigslist()
-        job_streeteasy()
+        # job_craigslist()
+        # job_streeteasy()
         job_gmail()
         logger.info("All jobs finished.")
         sys.exit(0)

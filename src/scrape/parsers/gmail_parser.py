@@ -30,7 +30,7 @@ pip install  google-auth google-auth-oauthlib google-auth-httplib2 google-api-py
 import base64
 import logging
 import re
-from datetime import datetime
+from datetime import datetime, UTC
 from email import message_from_bytes
 from typing import Optional, List
 
@@ -54,7 +54,7 @@ from ..utils.helpers import (
 
 logger = logging.getLogger(__name__)
 
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+SCOPES = ["https://www.googleapis.com/auth/gmail.modify"]
 
 
 # ---------------------------------------------------------------------------
@@ -98,7 +98,7 @@ def run_gmail_parser() -> dict:
             run.error_message = str(exc)
             totals["errors"] += 1
 
-        run.finished_at      = datetime.utcnow()
+        run.finished_at      = datetime.now(UTC)
         run.status           = "success" if totals["errors"] == 0 else "partial"
         run.listings_found   = totals["found"]
         run.listings_new     = totals["new"]
