@@ -747,14 +747,14 @@ export function PreferenceSetting({ activeTab, onTabChange, onBack, onNext, isFi
           return (
             <button
               key={id}
-              onClick={() => (isDone ? onTabChange(id) : undefined)}
+              onClick={() => onTabChange(id)}
               className={[
-                'px-[22px] py-[9px] rounded-full border-[1.5px] font-semibold text-[13px] tracking-[0.02em] transition-all duration-200',
+                'px-[22px] py-[9px] rounded-full border-[1.5px] font-semibold text-[13px] tracking-[0.02em] transition-all duration-200 cursor-pointer',
                 isActive
                   ? 'border-transparent text-white shadow-[0_4px_20px_rgba(106,92,255,0.35)]'
                   : isDone
-                  ? 'border-white/35 text-white/65 bg-transparent cursor-pointer'
-                  : 'border-white/20 text-white/40 bg-transparent cursor-default',
+                  ? 'border-white/35 text-white/65 bg-transparent'
+                  : 'border-white/20 text-white/40 bg-transparent',
               ].join(' ')}
               style={isActive ? { background: 'linear-gradient(135deg, #6A5CFF 0%, #4A6CFF 40%, #8A5CFF 70%, #FFB6A3 100%)' } : undefined}
             >

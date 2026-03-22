@@ -15,10 +15,15 @@ export function OnboardingPage() {
     document.getElementById('ob-form-section')?.scrollIntoView({ behavior: 'smooth' })
   }
 
+  const scrollToTop = () => {
+    document.getElementById('ob-form-section')?.scrollIntoView({ behavior: 'smooth' })
+  }
+
   const handleNext = () => {
     const idx = TABS.indexOf(activeTab)
     if (idx < TABS.length - 1) {
       setActiveTab(TABS[idx + 1])
+      scrollToTop()
     } else {
       setOnboardingStep(4)
     }
@@ -28,6 +33,7 @@ export function OnboardingPage() {
     const idx = TABS.indexOf(activeTab)
     if (idx > 0) {
       setActiveTab(TABS[idx - 1])
+      scrollToTop()
     }
   }
 
