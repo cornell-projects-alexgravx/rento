@@ -52,41 +52,41 @@ open http://localhost:5173
 ```mermaid
 graph TB
     subgraph Frontend
-        UI[React + Vite + Tailwind]
-        Store[Zustand Store]
-        UI <--> Store
+        UI["React + Vite + Tailwind"]
+        Store["Zustand Store"]
+        UI --- Store
     end
 
     subgraph Backend
-        API[FastAPI REST API]
-        subgraph AI Agents
-            A1[Agent 1<br/>Image Analysis]
-            A2[Agent 2<br/>Semantic Matching]
-            A3[Agent 3<br/>Autonomous Negotiation]
+        API["FastAPI REST API"]
+        subgraph AI_Agents["AI Agents"]
+            A1["Agent 1 — Image Analysis"]
+            A2["Agent 2 — Semantic Matching"]
+            A3["Agent 3 — Autonomous Negotiation"]
         end
-        Services[Matching & Scoring<br/>Services]
+        Services["Matching & Scoring Services"]
     end
 
     subgraph Infrastructure
-        DB[(PostgreSQL)]
-        SMTP[Mailpit<br/>SMTP Server]
-        Claude[Claude API<br/>Anthropic]
+        DB[("PostgreSQL")]
+        SMTP["Mailpit SMTP Server"]
+        Claude["Claude API — Anthropic"]
     end
 
-    subgraph Data Sources
-        CL[Craigslist<br/>Parser]
-        SE[StreetEasy<br/>Parser]
+    subgraph Data_Sources["Data Sources"]
+        CL["Craigslist Parser"]
+        SE["StreetEasy Parser"]
     end
 
-    UI -- REST /api/v1 --> API
+    UI -- "REST /api/v1" --> API
     API --> Services
-    API --> AI Agents
-    A1 -- Vision API --> Claude
-    A2 -- Text API --> Claude
-    A3 -- Text API --> Claude
-    A3 -- Sends emails --> SMTP
+    API --> AI_Agents
+    A1 -- "Vision API" --> Claude
+    A2 -- "Text API" --> Claude
+    A3 -- "Text API" --> Claude
+    A3 -- "Sends emails" --> SMTP
     Services --> DB
-    AI Agents --> DB
+    AI_Agents --> DB
     API --> DB
     CL --> DB
     SE --> DB
