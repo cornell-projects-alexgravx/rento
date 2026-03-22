@@ -1,101 +1,87 @@
+import { useState } from 'react'
 import { useStore } from '../../store/useStore'
-import { Step1Housing } from './Step1Housing'
-import { Step2Negotiation } from './Step2Negotiation'
-import { Step3Notifications } from './Step3Notifications'
+import { Hero } from './Hero'
+import { PreferenceSetting, type Tab } from './PreferenceSetting'
 import { CompletionScreen } from './CompletionScreen'
 
-const STEPS = [
-  { num: 1, label: 'My Preferences' },
-  { num: 2, label: 'AI Negotiation' },
-  { num: 3, label: 'Notifications' },
-]
+const TABS: Tab[] = ['housing', 'negotiation', 'notifications']
 
 export function OnboardingPage() {
   const { onboardingStep, setOnboardingStep } = useStore()
-
+  const [activeTab, setActiveTab] = useState<Tab>('housing')
   const isComplete = onboardingStep > 3
-  const progressPct = isComplete ? 100 : Math.round((onboardingStep / 3) * 100)
 
-  const goStep = (n: number) => {
-    setOnboardingStep(Math.min(4, Math.max(1, n)))
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+  const scrollToForm = () => {
+    document.getElementById('ob-form-section')?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const scrollToTop = () => {
+    document.getElementById('ob-form-section')?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const handleNext = () => {
+    const idx = TABS.indexOf(activeTab)
+    if (idx < TABS.length - 1) {
+      setActiveTab(TABS[idx + 1])
+      scrollToTop()
+    } else {
+      setOnboardingStep(4)
+    }
+  }
+
+  const handleBack = () => {
+    const idx = TABS.indexOf(activeTab)
+    if (idx > 0) {
+      setActiveTab(TABS[idx - 1])
+      scrollToTop()
+    }
   }
 
   return (
-    <div className="ob">
-      <div className="ob-inner">
+    <div style={{ overflowX: 'hidden' }}>
+      <Hero onGetStarted={scrollToForm} />
 
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 48 }} className="ob-anim-fade-down">
-          <div className="ob-logo">
-            <span className="ob-logo-dot" />
-            FINDHOME AI
-            <span className="ob-logo-dot" />
+      {/* ════════════════════════════════════════
+          PREFERENCES DARK SECTION
+      ════════════════════════════════════════ */}
+      <section
+        id="ob-form-section"
+        style={{
+          background: 'linear-gradient(160deg, #0B1627 0%, #101e38 60%, #0d1a30 100%)',
+          padding: '72px 24px 96px',
+          minHeight: '60vh',
+        }}
+      >
+        {isComplete ? (
+          <div
+            style={{
+              maxWidth: 720,
+              margin: '0 auto',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.09)',
+              borderRadius: 20,
+              padding: 40,
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+            }}
+          >
+            <div className="ob ob-glass">
+              <CompletionScreen />
+            </div>
           </div>
-          <h1 className="ob-h1">Find your perfect home</h1>
-          <p className="ob-subtitle">
-            Three quick steps — then let AI match, negotiate, and keep you posted.
-          </p>
-        </div>
-
-        {/* Progress bar */}
-        <div className="ob-progress-track ob-anim-fade-down">
-          <div className="ob-progress-fill" style={{ width: `${progressPct}%` }} />
-        </div>
-
-        {/* Step nav */}
-        {!isComplete && (
-          <div className="ob-steps-nav ob-anim-fade-down">
-            {STEPS.map(({ num, label }) => {
-              const isDone = num < onboardingStep
-              const isActive = num === onboardingStep
-              return (
-                <button
-                  key={num}
-                  className={`ob-step-btn${isActive ? ' ob-active' : isDone ? ' ob-done' : ''}`}
-                  onClick={() => isDone ? goStep(num) : undefined}
-                >
-                  <span className="ob-step-num">{isDone ? '✓' : num}</span>
-                  {label}
-                </button>
-              )
-            })}
-          </div>
+        ) : (
+          <>
+            <PreferenceSetting
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              onBack={handleBack}
+              onNext={handleNext}
+              isFirstTab={activeTab === 'housing'}
+              isLastTab={activeTab === 'notifications'}
+            />
+          </>
         )}
-
-        {/* Panel */}
-        <div className="ob-anim-fade-up">
-          {isComplete ? (
-            <CompletionScreen />
-          ) : onboardingStep === 1 ? (
-            <Step1Housing />
-          ) : onboardingStep === 2 ? (
-            <Step2Negotiation />
-          ) : (
-            <Step3Notifications />
-          )}
-        </div>
-
-        {/* Bottom nav */}
-        {!isComplete && (
-          <div className="ob-bottom-nav ob-anim-fade-up">
-            <button
-              className="ob-btn ob-btn-ghost"
-              onClick={() => goStep(onboardingStep - 1)}
-              disabled={onboardingStep === 1}
-            >
-              ← Back
-            </button>
-            <button
-              className={`ob-btn ${onboardingStep === 3 ? 'ob-btn-success' : 'ob-btn-primary'}`}
-              onClick={() => goStep(onboardingStep + 1)}
-            >
-              {onboardingStep === 3 ? 'Finish setup →' : 'Next →'}
-            </button>
-          </div>
-        )}
-
-      </div>
+      </section>
     </div>
   )
 }
