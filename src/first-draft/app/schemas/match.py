@@ -32,25 +32,3 @@ class MatchUpdate(BaseModel):
     match_score: Optional[float] = None
     match_reasoning: Optional[str] = None
 
-
-# --- Vote ---
-
-class VoteBase(BaseModel):
-    user_id: str
-    apartment_id: str
-    vote: str
-
-
-class VoteCreate(VoteBase):
-    pass
-
-
-class VoteRead(VoteBase):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: str
-    created_at: datetime
-
-
-class VoteUpdate(BaseModel):
-    vote: Optional[str] = None

@@ -1,11 +1,12 @@
 # Dependencies
 node_modules/
-# ── Secrets & credentials — NEVER commit these ────────────────────────────
+
+# Secrets & credentials - NEVER commit these
 .env
 credentials.json
 token.json
 
-# ── Python ────────────────────────────────────────────────────────────────
+# Python
 __pycache__/
 *.pyc
 
@@ -19,22 +20,17 @@ dist/
 build/
 .eggs/
 
-# Environment variables
-.env
-
 # Virtual environment
 venv/
-# ── Virtual environments ──────────────────────────────────────────────────
 .venv/
-venv/
 env/
 
-# IDE
-# ── Logs ─────────────────────────────────────────────────────────────────
+
+# ── Logs ──────
 *.log
 *.log.*
 
-# ── IDEs ──────────────────────────────────────────────────────────────────
+# IDE
 .idea/
 .vscode/
 .idea/

@@ -22,7 +22,6 @@ class ObjectivePreferences(Base):
     lease_length_months: Mapped[int | None] = mapped_column(Integer, nullable=True)
     laundry: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
     parking: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
-    amenities: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
     pets: Mapped[bool] = mapped_column(Boolean, default=False)
     work_latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
     work_longitude: Mapped[float | None] = mapped_column(Float, nullable=True)

@@ -63,7 +63,6 @@ class NotificationType(str, Enum):
     match = "match"
     price_drop = "price_drop"
     negotiation = "negotiation"
-    tour = "tour"
 
 
 class NotificationFrequency(str, Enum):
@@ -76,12 +75,6 @@ class MatchStatus(str, Enum):
     not_started = "not_started"
     in_progress = "in_progress"
     completed = "completed"
-
-
-class VoteType(str, Enum):
-    like = "like"
-    dislike = "dislike"
-    love = "love"
 
 
 class MessageType(str, Enum):

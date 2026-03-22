@@ -28,7 +28,7 @@ from app.models.preferences import (
     NotificationPreferences,
 )
 from app.models.apartment import NeighborInfo, Apartment
-from app.models.match import Match, Vote
+from app.models.match import Match
 from app.models.notification import Notification
 
 
@@ -60,32 +60,22 @@ USERS = [
     ("Connor Walsh", "+1 (929) 555-0913"),
 ]
 
-AMENITIES_POOL = [
-    "gym", "rooftop", "doorman", "elevator", "dishwasher", "ac",
-    "storage", "balcony", "hardwood-floors", "exposed-brick", "stainless-appliances",
-    "high-ceilings", "concierge", "bike-room", "package-room",
-]
-
 IMAGE_LABELS_POOL = [
     "bright", "modern", "open-kitchen", "hardwood-floors", "high-ceilings",
     "cozy", "minimalist", "industrial", "renovated", "natural-light",
     "spacious", "city-views", "exposed-brick", "loft-style", "luxury",
 ]
 
-VOTE_TYPES = ["like", "dislike", "love"]
-
-NOTIFICATION_TYPES = ["match", "price_drop", "negotiation", "tour"]
+NOTIFICATION_TYPES = ["match", "price_drop", "negotiation"]
 
 NOTIFICATION_MESSAGES = [
     ("match", "New match found: {apt} in {hood} is a 94% match for your preferences."),
     ("price_drop", "Price drop alert: {apt} in {hood} dropped from ${old} to ${new}/mo."),
     ("negotiation", "Your agent completed a negotiation for {apt}. New offer: ${price}/mo."),
-    ("tour", "Tour confirmed for {apt} in {hood} on {date} at 2:00 PM."),
     ("match", "3 new apartments matching your criteria appeared in {hood} today."),
     ("price_drop", "Weekend deal: {apt} in {hood} is now ${new}/mo — act fast!"),
     ("negotiation", "Counter-offer received for {apt}. Review and respond before Friday."),
-    ("tour", "Reminder: Your tour for {apt} starts in 1 hour."),
-    ("match", "Based on your vote history, you may love this new listing in {hood}."),
+    ("match", "Based on your preferences, you may love this new listing in {hood}."),
     ("price_drop", "{apt} in {hood} has been reduced by $200/mo. View details now."),
 ]
 
@@ -192,9 +182,9 @@ async def seed(db: AsyncSession) -> None:
                 lease_length_months=random.choice([6, 12, 18, 24]),
                 laundry=random.choice(LAUNDRY_OPTIONS),
                 parking=random.choice(PARKING_OPTIONS),
-                amenities=rand_subset(AMENITIES_POOL, 2, 6),
                 pets=random.choice([True, False]),
-                host_contact=f"host{apt_count + 1}@rentolistings.nyc",
+                host_phone=f"+1 (212) 555-{random.randint(1000, 9999)}",
+                host_email=f"host{apt_count + 1}@rentolistings.nyc",
                 images=images,
                 image_labels=rand_subset(IMAGE_LABELS_POOL, 3, 5),
                 created_at=datetime.utcnow(),
@@ -222,7 +212,6 @@ async def seed(db: AsyncSession) -> None:
             lease_length_months=random.choice([12, 24]),
             laundry=random.choice(LAUNDRY_OPTIONS) or ["in_unit"],
             parking=random.choice(PARKING_OPTIONS),
-            amenities=rand_subset(AMENITIES_POOL, 1, 4),
             pets=random.choice([True, False]),
             work_latitude=round(40.7549 + random.uniform(-0.05, 0.05), 6),
             work_longitude=round(-73.9840 + random.uniform(-0.05, 0.05), 6),
@@ -271,7 +260,7 @@ async def seed(db: AsyncSession) -> None:
     print(f"Inserted {len(user_objs)} negotiation preference records.")
 
     # --- Notification Preferences (one per user) ---
-    notif_types_pool = ["match", "price_drop", "negotiation", "tour"]
+    notif_types_pool = ["match", "price_drop", "negotiation"]
     for user in user_objs:
         obj = NotificationPreferences(
             id=rand_id(),
@@ -307,7 +296,7 @@ async def seed(db: AsyncSession) -> None:
             match_score=score,
             match_reasoning=(
                 f"This apartment scores {score:.0%} based on budget fit, "
-                f"location preference, and {random.randint(2,5)} matching amenities."
+                f"location preference, and style compatibility."
             ),
             created_at=datetime.utcnow(),
         )
@@ -315,30 +304,6 @@ async def seed(db: AsyncSession) -> None:
         match_objs.append(match)
     await db.commit()
     print(f"Inserted {len(match_objs)} matches.")
-
-    # --- Votes (50, random user-apartment-vote) ---
-    vote_pairs: set[tuple[str, str]] = set()
-    vote_count = 0
-    attempts = 0
-    while vote_count < 50 and attempts < 500:
-        attempts += 1
-        user = random.choice(user_objs)
-        apt = random.choice(apartment_objs)
-        pair = (user.id, apt.id)
-        if pair in vote_pairs:
-            continue
-        vote_pairs.add(pair)
-        vote = Vote(
-            id=rand_id(),
-            user_id=user.id,
-            apartment_id=apt.id,
-            vote=random.choice(VOTE_TYPES),
-            created_at=datetime.utcnow(),
-        )
-        db.add(vote)
-        vote_count += 1
-    await db.commit()
-    print(f"Inserted {vote_count} votes.")
 
     # --- Notifications (10) ---
     apt_name_map = {a.id: a.name for a in apartment_objs}
@@ -381,7 +346,6 @@ async def seed(db: AsyncSession) -> None:
     print(f"  Neg. prefs:    {len(user_objs)}")
     print(f"  Notif. prefs:  {len(user_objs)}")
     print(f"  Matches:       {len(match_objs)}")
-    print(f"  Votes:         {vote_count}")
     print(f"  Notifications: 10")
 
 

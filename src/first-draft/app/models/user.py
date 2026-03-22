@@ -30,9 +30,6 @@ class User(Base):
     matches: Mapped[list["Match"]] = relationship(
         "Match", back_populates="user", cascade="all, delete-orphan"
     )
-    votes: Mapped[list["Vote"]] = relationship(
-        "Vote", back_populates="user", cascade="all, delete-orphan"
-    )
     notifications: Mapped[list["Notification"]] = relationship(
         "Notification", back_populates="user", cascade="all, delete-orphan"
     )

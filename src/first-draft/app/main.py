@@ -12,7 +12,6 @@ from app.routers import (
     apartments,
     neighborhoods,
     matches,
-    votes,
     agent_logs,
     messages,
     notifications,
@@ -45,7 +44,6 @@ app.include_router(preferences.router)
 app.include_router(apartments.router)
 app.include_router(neighborhoods.router)
 app.include_router(matches.router)
-app.include_router(votes.router)
 app.include_router(agent_logs.router)
 app.include_router(messages.router)
 app.include_router(notifications.router)

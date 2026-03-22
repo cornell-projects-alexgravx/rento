@@ -39,9 +39,9 @@ class ApartmentBase(BaseModel):
     lease_length_months: Optional[int] = None
     laundry: List[str] = []
     parking: List[str] = []
-    amenities: List[str] = []
     pets: bool = False
-    host_contact: Optional[str] = None
+    host_phone: Optional[str] = None
+    host_email: Optional[str] = None
     images: List[str] = []
     image_labels: List[str] = []
 
@@ -68,8 +68,8 @@ class ApartmentUpdate(BaseModel):
     lease_length_months: Optional[int] = None
     laundry: Optional[List[str]] = None
     parking: Optional[List[str]] = None
-    amenities: Optional[List[str]] = None
     pets: Optional[bool] = None
-    host_contact: Optional[str] = None
+    host_phone: Optional[str] = None
+    host_email: Optional[str] = None
     images: Optional[List[str]] = None
     image_labels: Optional[List[str]] = None

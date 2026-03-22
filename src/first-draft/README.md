@@ -99,7 +99,6 @@ curl -X POST BASE_URL/users/{user_id}/objective-preferences \
     "move_in_date": "2026-05-01",
     "laundry": ["in_unit"],
     "parking": [],
-    "amenities": ["gym", "doorman"],
     "pets": false,
     "commute_method": "transit",
     "max_commute_minutes": 30
@@ -251,9 +250,9 @@ curl -X POST BASE_URL/apartments \
     "lease_length_months": 12,
     "laundry": ["in_unit"],
     "parking": [],
-    "amenities": ["gym", "rooftop", "doorman"],
     "pets": false,
-    "host_contact": "host@example.com",
+    "host_phone": "+1 (212) 555-4321",
+    "host_email": "host@example.com",
     "images": ["https://picsum.photos/seed/abc/800/600"],
     "image_labels": ["bright", "modern", "high-ceilings"]
   }'
@@ -285,7 +284,7 @@ curl -X POST BASE_URL/matches \
     "status": "not_started",
     "commute_minutes": 25,
     "match_score": 0.92,
-    "match_reasoning": "Strong budget and location alignment with 4 matching amenities."
+    "match_reasoning": "Strong budget and location alignment with style compatibility."
   }'
 ```
 
@@ -501,7 +500,7 @@ curl -X POST BASE_URL/agent-logs/agent3 \
 | `negotiation_style` | `polite`, `professional`, `assertive`, `friendly` |
 | `negotiable_items[]` | `rent_price`, `move_in_date`, `lease_length`, `deposit`, `parking_fee`, `pet_fee`, `utilities`, `furnishing`, `application_fee`, `promotions` |
 | `goals[]` | `save_money`, `stay_flexible`, `live_better`, `fit_lifestyle`, `hassle_free` |
-| `notification type` | `match`, `price_drop`, `negotiation`, `tour` |
+| `notification type` | `match`, `price_drop`, `negotiation` |
 | `frequency` | `realtime`, `daily`, `weekly` |
 | `match status` | `not_started`, `in_progress`, `completed` |
 | `vote` | `like`, `dislike`, `love` |

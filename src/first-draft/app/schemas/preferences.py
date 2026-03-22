@@ -17,7 +17,6 @@ class ObjectivePreferencesBase(BaseModel):
     lease_length_months: Optional[int] = None
     laundry: List[str] = []
     parking: List[str] = []
-    amenities: List[str] = []
     pets: bool = False
     work_latitude: Optional[float] = None
     work_longitude: Optional[float] = None
@@ -45,7 +44,6 @@ class ObjectivePreferencesUpdate(BaseModel):
     lease_length_months: Optional[int] = None
     laundry: Optional[List[str]] = None
     parking: Optional[List[str]] = None
-    amenities: Optional[List[str]] = None
     pets: Optional[bool] = None
     work_latitude: Optional[float] = None
     work_longitude: Optional[float] = None

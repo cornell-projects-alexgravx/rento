@@ -32,10 +32,6 @@ from app.schemas.match import (
     MatchCreate,
     MatchRead,
     MatchUpdate,
-    VoteBase,
-    VoteCreate,
-    VoteRead,
-    VoteUpdate,
 )
 from app.schemas.agent_logs import (
     Agent1LogBase,
@@ -68,7 +64,6 @@ __all__ = [
     "NeighborInfoBase", "NeighborInfoCreate", "NeighborInfoRead", "NeighborInfoUpdate",
     "ApartmentBase", "ApartmentCreate", "ApartmentRead", "ApartmentUpdate",
     "MatchBase", "MatchCreate", "MatchRead", "MatchUpdate",
-    "VoteBase", "VoteCreate", "VoteRead", "VoteUpdate",
     "Agent1LogBase", "Agent1LogCreate", "Agent1LogRead", "Agent1LogUpdate",
     "Agent2LogBase", "Agent2LogCreate", "Agent2LogRead", "Agent2LogUpdate",
     "Agent3LogBase", "Agent3LogCreate", "Agent3LogRead", "Agent3LogUpdate",
