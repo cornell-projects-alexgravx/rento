@@ -338,9 +338,9 @@ function AptDetail({ listing }: { listing: Listing }) {
           width={width}
           gridConfig={{ cols: 12, rowHeight: 52, margin: [12, 12], containerPadding: [0, 0] }}
           dragConfig={{ handle: '.drag-handle' }}
-          resizeConfig={{ resizeHandles: ['se'] }}
+          resizeConfig={{ handles: ['se'] }}
           compactor={verticalCompactor}
-          onLayoutChange={(l: LayoutItem[]) => setLayout(l)}
+          onLayoutChange={(l) => setLayout([...l] as LayoutItem[])}
         >
           {/* Image & Info */}
           {activeCards.includes('image') && (
