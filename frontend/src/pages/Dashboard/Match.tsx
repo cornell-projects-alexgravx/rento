@@ -7,9 +7,8 @@ import {
   BedDouble, Bath, Maximize2,
   ListFilter, MessageSquare, Plus,
   Sparkles, MapPin, GripVertical, X,
-  ChevronLeft, ChevronRight, LayoutGrid,
+  ChevronLeft, ChevronRight, LayoutGrid, Heart,
 } from 'lucide-react'
-import likeIcon from '../../assets/image/like.svg'
 import dislikeIcon from '../../assets/image/dislike.svg'
 import laundryIcon from '../../assets/image/landry.svg'
 import parkingIcon from '../../assets/image/parking.svg'
@@ -36,10 +35,10 @@ import type { MessageOut } from '../../lib/api'
 type NegStatusFilter = 'all' | 'not-started' | 'in-progress' | 'completed'
 
 const STATUS_FILTERS: { key: NegStatusFilter; label: string }[] = [
-  { key: 'all',         label: 'All' },
+  { key: 'all', label: 'All' },
   { key: 'not-started', label: 'Not Started' },
   { key: 'in-progress', label: 'In Progress' },
-  { key: 'completed',   label: 'Done' },
+  { key: 'completed', label: 'Done' },
 ]
 
 function negStatusOf(l: Listing): NegStatusFilter {
@@ -131,12 +130,30 @@ function NegotiationChat({ listingId }: { listingId: string }) {
 function GridCard({ listing, selected, onClick }: {
   listing: Listing; selected: boolean; onClick: () => void
 }) {
+  const { removeListing, likedListings, toggleLike } = useStore()
+  const isLiked = likedListings.has(listing.id)
+  const [animating, setAnimating] = useState(false)
   const bedLabel = listing.bedrooms === 'Studio' ? 'Studio' : `${listing.bedrooms.replace(/\D/g, '')} beds`
 
-  async function handleReact(action: 'like' | 'dislike', e: React.MouseEvent) {
+  async function handleLike(e: React.MouseEvent) {
     e.stopPropagation()
+    toggleLike(listing.id)
+    if (!isLiked) {
+      setAnimating(true)
+      setTimeout(() => setAnimating(false), 500)
+    }
     try {
-      await listingsApi.react(listing.id, action)
+      await listingsApi.react(listing.id, isLiked ? 'dislike' : 'like')
+    } catch {
+      // ignore
+    }
+  }
+
+  async function handleDislike(e: React.MouseEvent) {
+    e.stopPropagation()
+    removeListing(listing.id)
+    try {
+      await listingsApi.react(listing.id, 'dislike')
     } catch {
       // ignore
     }
@@ -158,11 +175,27 @@ function GridCard({ listing, selected, onClick }: {
           onError={e => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${listing.id}/400/200` }}
         />
         <div className="absolute top-3 right-3 flex gap-2">
-          <button onClick={(e) => handleReact('like', e)} className="flex items-center justify-center">
-            <img src={likeIcon} alt="like" className="w-7 h-7 object-contain" />
+          <button
+            onClick={handleLike}
+            className={cn(
+              'flex items-center justify-center w-8 h-8 rounded-full backdrop-blur-sm transition-all duration-200',
+              isLiked ? 'bg-red-500/20' : 'bg-black/20 hover:bg-black/30'
+            )}
+          >
+            <Heart
+              size={18}
+              className={cn(
+                'transition-all duration-200',
+                isLiked ? 'text-red-500 fill-red-500' : 'text-white',
+                animating && 'animate-heart-pop'
+              )}
+            />
           </button>
-          <button onClick={(e) => handleReact('dislike', e)} className="flex items-center justify-center">
-            <img src={dislikeIcon} alt="dislike" className="w-7 h-7 object-contain" />
+          <button
+            onClick={handleDislike}
+            className="flex items-center justify-center w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm hover:bg-black/30 transition-all duration-200"
+          >
+            <img src={dislikeIcon} alt="dislike" className="w-5 h-5 object-contain" />
           </button>
         </div>
       </div>
@@ -191,12 +224,30 @@ function GridCard({ listing, selected, onClick }: {
 function ListCard({ listing, selected, onClick }: {
   listing: Listing; selected: boolean; onClick: () => void
 }) {
+  const { removeListing, likedListings, toggleLike } = useStore()
+  const isLiked = likedListings.has(listing.id)
+  const [animating, setAnimating] = useState(false)
   const bedLabel = listing.bedrooms === 'Studio' ? 'Studio' : `${listing.bedrooms.replace(/\D/g, '')} beds`
 
-  async function handleReact(action: 'like' | 'dislike', e: React.MouseEvent) {
+  async function handleLike(e: React.MouseEvent) {
     e.stopPropagation()
+    toggleLike(listing.id)
+    if (!isLiked) {
+      setAnimating(true)
+      setTimeout(() => setAnimating(false), 500)
+    }
     try {
-      await listingsApi.react(listing.id, action)
+      await listingsApi.react(listing.id, isLiked ? 'dislike' : 'like')
+    } catch {
+      // ignore
+    }
+  }
+
+  async function handleDislike(e: React.MouseEvent) {
+    e.stopPropagation()
+    removeListing(listing.id)
+    try {
+      await listingsApi.react(listing.id, 'dislike')
     } catch {
       // ignore
     }
@@ -218,11 +269,27 @@ function ListCard({ listing, selected, onClick }: {
           onError={e => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${listing.id}/300/200` }}
         />
         <div className="absolute top-2 right-2 flex gap-1.5">
-          <button onClick={(e) => handleReact('like', e)}>
-            <img src={likeIcon} alt="like" className="w-5 h-5 object-contain" />
+          <button
+            onClick={handleLike}
+            className={cn(
+              'flex items-center justify-center w-7 h-7 rounded-full backdrop-blur-sm transition-all duration-200',
+              isLiked ? 'bg-red-500/20' : 'bg-black/20 hover:bg-black/30'
+            )}
+          >
+            <Heart
+              size={14}
+              className={cn(
+                'transition-all duration-200',
+                isLiked ? 'text-red-500 fill-red-500' : 'text-white',
+                animating && 'animate-heart-pop'
+              )}
+            />
           </button>
-          <button onClick={(e) => handleReact('dislike', e)}>
-            <img src={dislikeIcon} alt="dislike" className="w-5 h-5 object-contain" />
+          <button
+            onClick={handleDislike}
+            className="flex items-center justify-center w-7 h-7 rounded-full bg-black/20 backdrop-blur-sm hover:bg-black/30 transition-all duration-200"
+          >
+            <img src={dislikeIcon} alt="dislike" className="w-4 h-4 object-contain" />
           </button>
         </div>
       </div>
@@ -250,17 +317,17 @@ type CardId = 'image' | 'rationale' | 'map' | 'neighborhood' | 'negotiation'
 interface LayoutItem { i: string; x: number; y: number; w: number; h: number; minW?: number; minH?: number }
 
 const ALL_CARD_DEFS: { id: CardId; label: string }[] = [
-  { id: 'image',        label: 'Image & Info' },
-  { id: 'rationale',   label: 'Rationale' },
-  { id: 'map',         label: 'Map' },
+  { id: 'image', label: 'Image & Info' },
+  { id: 'rationale', label: 'Rationale' },
+  { id: 'map', label: 'Map' },
   { id: 'neighborhood', label: 'Neighborhood' },
   { id: 'negotiation', label: 'Negotiation' },
 ]
 
 const DEFAULT_LAYOUT: LayoutItem[] = [
-  { i: 'image',        x: 0, y: 0,  w: 6, h: 10, minW: 3, minH: 5 },
-  { i: 'rationale',   x: 6, y: 0,  w: 6, h: 5,  minW: 3, minH: 3 },
-  { i: 'map',         x: 6, y: 5,  w: 6, h: 5,  minW: 3, minH: 3 },
+  { i: 'image', x: 0, y: 0, w: 6, h: 10, minW: 3, minH: 5 },
+  { i: 'rationale', x: 6, y: 0, w: 6, h: 5, minW: 3, minH: 3 },
+  { i: 'map', x: 6, y: 5, w: 6, h: 5, minW: 3, minH: 3 },
   { i: 'neighborhood', x: 0, y: 10, w: 12, h: 3, minW: 4, minH: 2 },
   { i: 'negotiation', x: 0, y: 13, w: 12, h: 5, minW: 4, minH: 3 },
 ]
@@ -293,7 +360,7 @@ function AptDetail({ listing }: { listing: Listing }) {
     fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(loc)}&limit=1`)
       .then(r => r.json())
       .then(data => { if (data[0]) setMapCenter([parseFloat(data[0].lat), parseFloat(data[0].lon)]) })
-      .catch(() => {})
+      .catch(() => { })
   }, [preferences.housing.location])
 
   const moveInDate = new Date(listing.availableFrom).toLocaleDateString('en-US', {
@@ -301,8 +368,8 @@ function AptDetail({ listing }: { listing: Listing }) {
   })
 
   const amenities = [
-    { label: 'on_site',       icon: laundryIcon },
-    { label: 'garage',        icon: parkingIcon },
+    { label: 'On Site', icon: laundryIcon },
+    { label: 'garage', icon: parkingIcon },
     { label: 'pets friendly', icon: petIcon },
   ]
 
@@ -460,19 +527,22 @@ function AptDetail({ listing }: { listing: Listing }) {
 
           {/* Map */}
           {activeCards.includes('map') && (
-            <div key="map" className="rounded-2xl overflow-hidden flex flex-col">
-              <MapContainer
-                center={mapCenter} zoom={12}
-                scrollWheelZoom={true} zoomControl={false}
-                style={{ width: '100%', height: '100%' }}
-              >
-                <TileLayer
-                  url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                  attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-                />
-                <Marker position={[listing.lat, listing.lng]} />
-                <MapInvalidator />
-              </MapContainer>
+            <div key="map" className="bg-white/30 backdrop-blur-sm rounded-2xl overflow-hidden flex flex-col">
+              <CardHeader id="map" label="Map" icon={<MapPin size={13} className="text-white" />} />
+              <div className="flex-1 overflow-hidden">
+                <MapContainer
+                  center={mapCenter} zoom={12}
+                  scrollWheelZoom={true} zoomControl={false}
+                  style={{ width: '100%', height: '100%' }}
+                >
+                  <TileLayer
+                    url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                    attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+                  />
+                  <Marker position={[listing.lat, listing.lng]} />
+                  <MapInvalidator />
+                </MapContainer>
+              </div>
             </div>
           )}
 
@@ -534,6 +604,17 @@ export function Match() {
   )
 
   const selectedListing = listings.find(l => l.id === selectedListingId) ?? null
+
+  // When the selected listing is removed (e.g. disliked), auto-select next or fall back to grid
+  useEffect(() => {
+    if (view !== 'grid' && !selectedListing) {
+      if (filtered.length > 0) {
+        setSelectedListing(filtered[0].id)
+      } else {
+        setView('grid')
+      }
+    }
+  }, [selectedListing, view, filtered, setSelectedListing])
 
   function handleSelectApt(id: string) {
     setSelectedListing(id)

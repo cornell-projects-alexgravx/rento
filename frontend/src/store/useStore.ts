@@ -57,6 +57,9 @@ interface AppState {
   negotiationCart: string[]
   addToNegotiation: (id: string) => void
   removeFromNegotiation: (id: string) => void
+  removeListing: (id: string) => void
+  likedListings: Set<string>
+  toggleLike: (id: string) => void
   loadListings: () => Promise<void>
 
   // Dashboard
@@ -379,6 +382,25 @@ export const useStore = create<AppState>((set, get) => ({
     })),
   removeFromNegotiation: (id) =>
     set((s) => ({ negotiationCart: s.negotiationCart.filter((x) => x !== id) })),
+
+  removeListing: (id) =>
+    set((s) => ({
+      listings: s.listings.filter((l) => l.id !== id),
+      negotiationCart: s.negotiationCart.filter((x) => x !== id),
+      selectedListingId: s.selectedListingId === id ? null : s.selectedListingId,
+    })),
+
+  likedListings: new Set<string>(),
+  toggleLike: (id) =>
+    set((s) => {
+      const next = new Set(s.likedListings)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return { likedListings: next }
+    }),
 
   loadListings: async () => {
     try {

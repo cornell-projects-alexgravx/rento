@@ -99,21 +99,6 @@ export function Hero({ onGetStarted }: Props) {
           >
             Get started
           </button>
-          <button
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: '50%',
-              background: '#010205',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <span style={{ color: '#fff', fontSize: 14 }}>›</span>
-          </button>
         </div>
       </nav>
 

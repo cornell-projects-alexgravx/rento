@@ -394,10 +394,10 @@ function NotifyView({ notifications }: { notifications: Notification[] }) {
           <span className="text-8xl font-bold text-white leading-none">3</span>
           <span className="text-white/80 text-lg font-medium">Appointment Arranged</span>
         </div>
-        <button className="flex items-center gap-3 px-5 py-3 rounded-xl bg-[#5B4FEA] text-white font-semibold text-sm hover:bg-[#4A3FD9] transition-colors">
+        <a href="https://calendar.google.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-5 py-3 rounded-xl bg-[#5B4FEA] text-white font-semibold text-sm hover:bg-[#4A3FD9] transition-colors no-underline">
           <img src={googleCalendarImg} alt="Google Calendar" className="w-8 h-8 shrink-0" />
           <span className="leading-tight">Go Check<br />Google Calendar</span>
-        </button>
+        </a>
       </div>
 
       {/* notification log */}

@@ -480,8 +480,12 @@ function NegotiationPanel() {
               <input type="date" value={negotiation.latestMoveIn} onChange={e => updateNegotiation({ latestMoveIn: e.target.value })} />
             </div>
             <div className="ob-field">
-              <label>Lease length range (months)</label>
-              <input type="text" placeholder={`${negotiation.leaseLengthMin} – ${negotiation.leaseLengthMax}`} readOnly />
+              <label>Min lease length (months)</label>
+              <input type="number" placeholder={`${negotiation.leaseLengthMin}`} value={negotiation.leaseLengthMin} onChange={e => updateNegotiation({ leaseLengthMin: Number(e.target.value) })} />
+            </div>
+            <div className="ob-field">
+              <label>Max lease length (months)</label>
+              <input type="number" placeholder={`${negotiation.leaseLengthMax}`} value={negotiation.leaseLengthMax} onChange={e => updateNegotiation({ leaseLengthMax: Number(e.target.value) })} />
             </div>
           </div>
         </div>
@@ -624,8 +628,8 @@ function NotificationsPanel() {
           {EVENT_TYPES.map(({ event, label }) => (
             <NotifItem key={event} label={label} selected={notifications.events.includes(event)} onClick={() => toggleEvent(event)} />
           ))}
-          <NotifItem key="better-matches" label="Better matches found" selected={false} onClick={() => {}} />
-          <NotifItem key="suspicious" label="Suspicious listing alert" selected={notifications.events.includes('New matches')} onClick={() => {}} />
+          <NotifItem key="better-matches" label="Better matches found" selected={false} onClick={() => { }} />
+          <NotifItem key="suspicious" label="Suspicious listing alert" selected={notifications.events.includes('New matches')} onClick={() => { }} />
         </div>
       </div>
 
@@ -749,12 +753,12 @@ export function PreferenceSetting({ activeTab, onTabChange, onBack, onNext, isFi
               key={id}
               onClick={() => onTabChange(id)}
               className={[
-                'px-[22px] py-[9px] rounded-full border-[1.5px] font-semibold text-[13px] tracking-[0.02em] transition-all duration-200 cursor-pointer',
+                'rounded-full font-semibold text-[13px] tracking-[0.02em] transition-all duration-200 cursor-pointer',
                 isActive
-                  ? 'border-transparent text-white shadow-[0_4px_20px_rgba(106,92,255,0.35)]'
+                  ? 'border-0 px-[23.5px] py-[10.5px] text-white shadow-[0_4px_20px_rgba(106,92,255,0.35)]'
                   : isDone
-                  ? 'border-white/35 text-white/65 bg-transparent'
-                  : 'border-white/20 text-white/40 bg-transparent',
+                    ? 'border-[1.5px] px-[22px] py-[9px] border-white/35 text-white/65 bg-transparent'
+                    : 'border-[1.5px] px-[22px] py-[9px] border-white/20 text-white/40 bg-transparent',
               ].join(' ')}
               style={isActive ? { background: 'linear-gradient(135deg, #6A5CFF 0%, #4A6CFF 40%, #8A5CFF 70%, #FFB6A3 100%)' } : undefined}
             >

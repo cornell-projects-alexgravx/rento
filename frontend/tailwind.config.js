@@ -29,6 +29,7 @@ export default {
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         'spin-slow': 'spin 3s linear infinite',
         'bounce-subtle': 'bounceSubtle 2s ease-in-out infinite',
+        'heart-pop': 'heartPop 0.45s cubic-bezier(0.17, 0.89, 0.32, 1.49)',
       },
       keyframes: {
         slideInRight: {
@@ -46,6 +47,12 @@ export default {
         bounceSubtle: {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-4px)' },
+        },
+        heartPop: {
+          '0%': { transform: 'scale(1)' },
+          '30%': { transform: 'scale(1.35)' },
+          '60%': { transform: 'scale(0.9)' },
+          '100%': { transform: 'scale(1)' },
         },
       },
     },
