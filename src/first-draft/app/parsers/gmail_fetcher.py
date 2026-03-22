@@ -31,16 +31,17 @@ from googleapiclient.discovery import build
 
 logger = logging.getLogger(__name__)
 
-# Read-only access to the mailbox is sufficient.
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+# modify scope is required to mark messages as read.
+SCOPES = ["https://www.googleapis.com/auth/gmail.modify"]
 
-# Label / query used to find StreetEasy alert emails.
-STREETEASY_QUERY = 'from:noreply@email.streeteasy.com subject:"Results for"'
+# Query used to find unread StreetEasy alert emails.
+STREETEASY_QUERY = "from:noreply@email.streeteasy.com is:unread"
 
 
 class GmailFetcher:
     """
-    Fetches StreetEasy alert emails from a Gmail account via the Gmail API.
+    Fetches unread StreetEasy alert emails from a Gmail account via the Gmail API,
+    and marks each message as read once it has been successfully fetched.
 
     Parameters
     ----------
@@ -71,7 +72,8 @@ class GmailFetcher:
         after_date: Optional[str] = None,
     ) -> list[dict]:
         """
-        Return a list of raw Gmail message dicts for StreetEasy alert emails.
+        Return a list of raw Gmail message dicts for unread StreetEasy alert emails.
+        Each successfully fetched message is marked as read immediately.
 
         Each dict contains a 'raw' key with the base64url-encoded RFC 2822
         message body, which can be passed directly to
@@ -100,9 +102,9 @@ class GmailFetcher:
             .execute()
         )
         message_stubs = response.get("messages", [])
-        logger.info("Found %d StreetEasy emails.", len(message_stubs))
+        logger.info("Found %d unread StreetEasy emails.", len(message_stubs))
 
-        # Fetch full raw message for each ID.
+        # Fetch full raw message for each ID, then mark as read.
         raw_messages: list[dict] = []
         for stub in message_stubs:
             msg_id = stub["id"]
@@ -114,10 +116,27 @@ class GmailFetcher:
                     .execute()
                 )
                 raw_messages.append(raw)
+                self._mark_as_read(msg_id)
             except Exception as exc:  # noqa: BLE001
                 logger.warning("Failed to fetch message %s: %s", msg_id, exc)
 
         return raw_messages
+
+    # ---------------------------------------------------------------------------
+    # Private helpers
+    # ---------------------------------------------------------------------------
+
+    def _mark_as_read(self, msg_id: str) -> None:
+        """Remove the UNREAD label from a message, marking it as read."""
+        try:
+            self._get_service().users().messages().modify(
+                userId="me",
+                id=msg_id,
+                body={"removeLabelIds": ["UNREAD"]},
+            ).execute()
+            logger.debug("Marked message %s as read.", msg_id)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Failed to mark message %s as read: %s", msg_id, exc)
 
     # ---------------------------------------------------------------------------
     # Auth helpers

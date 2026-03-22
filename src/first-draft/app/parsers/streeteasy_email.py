@@ -5,6 +5,13 @@ Parses StreetEasy saved-search alert emails fetched via the Gmail API
 and converts them into Apartment (+ NeighborInfo) records ready for
 upsert into the database.
 
+Supports two email templates:
+  - Search alert emails  ("N Results for Queens")
+      Plain-text marker: "Rental Unit in <Neighborhood>"  (mixed case)
+  - Recommendation emails ("Homes You May Have Missed", "Homes for You: …")
+      Plain-text marker: "RENTAL IN <NEIGHBORHOOD>"  (all-caps) or
+                         "COOP IN <NEIGHBORHOOD>"    (all-caps)
+
 Usage
 -----
     from parser import StreetEasyEmailParser
@@ -88,39 +95,46 @@ class ParsedListing:
 
 class StreetEasyEmailParser:
     """
-    Parses StreetEasy saved-search alert emails.
+    Parses StreetEasy emails from noreply@email.streeteasy.com.
 
-    StreetEasy wraps all outbound links through their click-tracker
-    (links.streeteasy.com), so we extract listing data from the *plain-text*
-    part of the email, which preserves the original streeteasy.com/rental/<id>
-    URLs.
+    Two plain-text block formats are handled:
+
+    Alert emails (search saved-search results):
+        Rental Unit in <Neighborhood>      ← mixed-case marker
+        <Address>
+        $<price> base rent
+        ...
+
+    Recommendation emails ("Homes You May Have Missed", "Homes for You"):
+        RENTAL IN <NEIGHBORHOOD>           ← all-caps marker (also "COOP IN …")
+        <Address>
+        <tracking-url>
+        $<price> base rent
+        ...
     """
 
     # Sender domains used to validate that this is actually a StreetEasy email.
     SENDER_DOMAINS = {"streeteasy.com", "email.streeteasy.com"}
 
-    # Regex: one listing block in the plain-text part.
-    # StreetEasy plain-text format (as observed):
-    #
-    #   Rental Unit in <Neighborhood>
-    #   <Address>
-    #    $<price> base rent
-    #
-    #   <beds>
-    #    <baths>
-    #    <brokerage name + address>
-    #   <https://streeteasy.com/rental/<id>>
-    _LISTING_BLOCK_RE = re.compile(
-        r"Rental Unit in ([^\n]+)\n"        # group 1: neighborhood
-        r"([^\n]+)\n"                        # group 2: address
-        r"\s*\$([\d,]+)\s+base rent",        # group 3: price (dollars, no cents)
+    # ---- Listing-block split patterns ----
+
+    # Alert emails: "Rental Unit in <Neighborhood>"
+    _ALERT_SPLIT_RE = re.compile(r"Rental Unit in ", re.MULTILINE)
+
+    # "Homes for You" emails: "Rental in <Neighborhood>" (mixed-case, no "Unit")
+    _HOMES_FOR_YOU_SPLIT_RE = re.compile(r"Rental in ", re.MULTILINE)
+
+    # "Homes You May Have Missed" emails: all-caps "RENTAL IN …" / "COOP IN …" etc.
+    _RECO_SPLIT_RE = re.compile(
+        r"(?:RENTAL|COOP|CONDO|CO-OP|TOWNHOUSE|HOUSE)\s+IN\s+",
         re.MULTILINE,
     )
 
+    # ---- Field regexes ----
     _BEDS_RE = re.compile(r"(\d+)\s*Bed|Studio", re.IGNORECASE)
     _BATHS_RE = re.compile(r"(\d+)\s*Bath", re.IGNORECASE)
     _RENTAL_URL_RE = re.compile(r"https://streeteasy\.com/rental/(\d+)")
-    _BROKERAGE_RE = re.compile(r"<https://streeteasy\.com/rental/\d+>")
+    _PRICE_RE = re.compile(r"\$([\d,]+)\s+base rent", re.IGNORECASE)
 
     # ---------------------------------------------------------------------------
 
@@ -128,17 +142,6 @@ class StreetEasyEmailParser:
         """
         Parse a message dict as returned by the Gmail API
         (users.messages.get with format='raw').
-
-        Parameters
-        ----------
-        gmail_message:
-            Dict with at least a 'raw' key containing the base64url-encoded
-            RFC 2822 message, and optionally 'id' and 'internalDate'.
-
-        Returns
-        -------
-        List of ParsedListing instances (empty list if nothing found or the
-        email is not a StreetEasy alert).
         """
         raw_bytes = base64.urlsafe_b64decode(
             gmail_message.get("raw", "") + "=="  # padding is idempotent
@@ -147,9 +150,7 @@ class StreetEasyEmailParser:
         return self._parse_bytes(raw_bytes, gmail_id=gmail_id)
 
     def parse_eml_file(self, path: str) -> list[ParsedListing]:
-        """
-        Parse a .eml file from disk (useful for local testing).
-        """
+        """Parse a .eml file from disk (useful for local testing)."""
         with open(path, "rb") as fh:
             raw_bytes = fh.read()
         return self._parse_bytes(raw_bytes)
@@ -163,7 +164,7 @@ class StreetEasyEmailParser:
     ) -> list[ParsedListing]:
         msg = email.message_from_bytes(raw_bytes, policy=policy.default)
 
-        if not self._is_streeteasy_alert(msg):
+        if not self._is_streeteasy_email(msg):
             logger.debug("Skipping non-StreetEasy email (id=%s)", gmail_id)
             return []
 
@@ -191,21 +192,14 @@ class StreetEasyEmailParser:
 
     # ---- Validation ----
 
-    def _is_streeteasy_alert(self, msg: email.message.Message) -> bool:
-        """Return True only for genuine StreetEasy saved-search alert emails."""
+    def _is_streeteasy_email(self, msg: email.message.Message) -> bool:
+        """Return True for any email originating from a StreetEasy domain."""
         sender = str(msg.get("from", ""))
         reply_to = str(msg.get("reply-to", ""))
-        subject = str(msg.get("subject", ""))
-
-        domain_ok = any(
+        return any(
             domain in sender or domain in reply_to
             for domain in self.SENDER_DOMAINS
         )
-        # StreetEasy alert subjects always contain "Results for" or "new to market"
-        subject_ok = bool(
-            re.search(r"results for|saved search|new to market", subject, re.IGNORECASE)
-        )
-        return domain_ok or subject_ok
 
     # ---- Email body extraction ----
 
@@ -225,79 +219,96 @@ class StreetEasyEmailParser:
 
     def _extract_listings(self, plain_text: str) -> list[ParsedListing]:
         """
-        Split the plain-text body into per-listing blocks and parse each one.
+        Try each known template in order, returning the first non-empty result.
 
-        Strategy: split on "Rental Unit in " — each segment that follows is
-        one listing card ending at (or before) the next "Rental Unit in ".
-        The first segment (before the first match) is the email header and
-        is discarded.
+        Template detection order:
+          1. Alert emails            — "Rental Unit in <Neighborhood>"
+          2. Homes for You           — "Rental in <Neighborhood>"
+          3. Homes You May Have Missed — "RENTAL IN / COOP IN <NEIGHBORHOOD>"
         """
-        # Split into blocks
-        blocks = re.split(r"Rental Unit in ", plain_text)
-        if len(blocks) < 2:
-            logger.debug("No 'Rental Unit in' markers found in plain text.")
-            return []
+        for split_re in (
+            self._ALERT_SPLIT_RE,
+            self._HOMES_FOR_YOU_SPLIT_RE,
+            self._RECO_SPLIT_RE,
+        ):
+            blocks = split_re.split(plain_text)
+            if len(blocks) >= 2:
+                listings = self._parse_blocks(blocks[1:], neighborhood_line=0)
+                if listings:
+                    return listings
 
+        logger.debug("No recognisable listing markers found in plain text.")
+        return []
+
+    def _parse_blocks(
+        self, raw_blocks: list[str], neighborhood_line: int
+    ) -> list[ParsedListing]:
         listings: list[ParsedListing] = []
-        for raw_block in blocks[1:]:
+        for raw_block in raw_blocks:
             try:
-                listing = self._parse_listing_block(raw_block)
+                listing = self._parse_listing_block(raw_block, neighborhood_line)
                 if listing:
                     listings.append(listing)
             except Exception as exc:  # noqa: BLE001
                 logger.warning("Failed to parse listing block: %s", exc, exc_info=True)
-
         return listings
 
-    def _parse_listing_block(self, block: str) -> Optional[ParsedListing]:
+    def _parse_listing_block(
+        self, block: str, neighborhood_line: int = 0
+    ) -> Optional[ParsedListing]:
         """
-        Parse a single listing block.
+        Parse a single listing block that starts immediately after the
+        split marker has been stripped.
 
-        Expected block structure (after "Rental Unit in " has been stripped):
-
+        Alert format (after "Rental Unit in "):
             Sunnyside
             45-15 43rd Avenue #4A
              $2,300 base rent
-
-
-             1 Bed
+             1 Bed  /  Studio
              1 Bath
-             Voro New York (1129 Northern Boulevard, Manhasset, NY 11030)
+             Brokerage Name (address)
             <https://streeteasy.com/rental/4995742>
+
+        Recommendation format (after "RENTAL IN " / "COOP IN "):
+            Elmhurst                            ← neighborhood (title-cased)
+            41-26 73rd Street #B31A
+            <https://streeteasy.com/rental/…>  ← tracking URL (skip)
+            $2,100 base rent
+             Studio
+             1 Bath
+             Brokerage Name (address)
+            <https://streeteasy.com/rental/4991459>
         """
         lines = [l.strip() for l in block.split("\n") if l.strip()]
-        if len(lines) < 4:
+        if len(lines) < 3:
             return None
 
-        # Line 0: neighborhood
-        neighborhood = lines[0]
+        # Line 0: neighborhood (may be all-caps in reco emails — title-case it)
+        neighborhood = lines[0].title()
 
         # Line 1: address
         address = lines[1]
 
-        # Line 2: price  — "$2,300 base rent"
-        price_match = re.search(r"\$([\d,]+)\s+base rent", lines[2], re.IGNORECASE)
-        if not price_match:
-            logger.debug("No price found in block starting with: %s", lines[:3])
-            return None
-        price = int(price_match.group(1).replace(",", ""))
-
-        # Lines 3+: beds, baths, brokerage, URL (order is consistent but
-        # we scan rather than assume exact positions).
+        # Remaining lines: scan for price, beds, baths, brokerage, URL.
+        price: Optional[int] = None
         bedroom_type = "Unknown"
         bathrooms: Optional[int] = None
         host_contact: Optional[str] = None
         streeteasy_url: Optional[str] = None
         streeteasy_id: Optional[str] = None
 
-        for line in lines[3:]:
+        for line in lines[2:]:
+            # Price
+            if price is None:
+                price_match = self._PRICE_RE.search(line)
+                if price_match:
+                    price = int(price_match.group(1).replace(",", ""))
+                    continue
+
             # Beds
             bed_match = self._BEDS_RE.search(line)
             if bed_match and bedroom_type == "Unknown":
-                if "studio" in line.lower():
-                    bedroom_type = "Studio"
-                else:
-                    bedroom_type = f"{bed_match.group(1)} Bed"
+                bedroom_type = "Studio" if "studio" in line.lower() else f"{bed_match.group(1)} Bed"
                 continue
 
             # Baths
@@ -306,20 +317,23 @@ class StreetEasyEmailParser:
                 bathrooms = int(bath_match.group(1))
                 continue
 
-            # Listing URL  — <https://streeteasy.com/rental/4995742>
+            # Listing URL  — <https://streeteasy.com/rental/4995742[?…]>
             url_match = self._RENTAL_URL_RE.search(line)
             if url_match and streeteasy_id is None:
-                streeteasy_url = url_match.group(0)
+                streeteasy_url = f"https://streeteasy.com/rental/{url_match.group(1)}"
                 streeteasy_id = url_match.group(1)
                 continue
 
-            # Brokerage / agent contact — everything that isn't beds/baths/URL
-            # and looks like "Agency Name (address)"
+            # Brokerage / agent contact — "Agency Name (address)"
             if re.search(r"\(.*\)", line) and host_contact is None:
                 host_contact = line
 
         if not streeteasy_id:
             logger.debug("No StreetEasy listing URL found in block: %s", lines)
+            return None
+
+        if price is None:
+            logger.debug("No price found in block: %s", lines)
             return None
 
         return ParsedListing(
