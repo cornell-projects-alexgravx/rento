@@ -77,9 +77,9 @@ ZENROWS_BASE_URL = "https://api.zenrows.com/v1/"
 # premium_proxy: residential IP, required for StreetEasy geo-checks.
 DEFAULT_ZENROWS_PARAMS: dict[str, Any] = {
     "js_render": "true",
-    "antibot": "true",
+    "antibot": "false",
     "wait": 3000,
-    "premium_proxy": "true",
+    "premium_proxy": "false",
 }
 
 REQUEST_DELAY_SECONDS = 2
