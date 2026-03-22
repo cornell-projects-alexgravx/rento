@@ -24,6 +24,8 @@ class Apartment(Base):
     __tablename__ = "apartments"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    streeteasy_id: Mapped[str | None] = mapped_column(String, unique=True, nullable=True)
+    craigslist_id: Mapped[str | None] = mapped_column(String, unique=True, nullable=True)
     name: Mapped[str] = mapped_column(String, nullable=False)
     bedroom_type: Mapped[str] = mapped_column(String, nullable=False)
     latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
@@ -39,6 +41,7 @@ class Apartment(Base):
     pets: Mapped[bool] = mapped_column(Boolean, default=False)
     host_phone: Mapped[str | None] = mapped_column(String, nullable=True)
     host_email: Mapped[str | None] = mapped_column(String, nullable=True)
+    amenities: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
     images: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
     image_labels: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)

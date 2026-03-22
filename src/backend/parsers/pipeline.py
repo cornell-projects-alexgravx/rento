@@ -33,6 +33,7 @@ import argparse
 import asyncio
 import logging
 import os
+from dotenv import load_dotenv
 
 logging.basicConfig(
     level=logging.INFO,
@@ -44,6 +45,7 @@ logger = logging.getLogger(__name__)
 _STREETEASY_GMAIL_QUERY = "from:noreply@email.streeteasy.com is:unread"
 _CRAIGSLIST_GMAIL_QUERY = "from:alerts@alerts.craigslist.org is:unread"
 
+load_dotenv()
 
 # ---------------------------------------------------------------------------
 # Per-source pipeline steps
@@ -87,7 +89,7 @@ async def _run_streeteasy(
         if not api_key:
             logger.warning("[StreetEasy] ZENROWS_API_KEY not set — skipping scraping.")
         else:
-            from app.parsers.listing_scraper import ListingScraper
+            from parsers.streeteasy_scraper import ListingScraper
             scraper = ListingScraper(
                 zenrows_api_key=api_key,
                 anthropic_api_key=os.environ.get("ANTHROPIC_API_KEY"),
@@ -143,7 +145,7 @@ async def _run_craigslist(
         if not api_key:
             logger.warning("[Craigslist] ZENROWS_API_KEY not set — skipping scraping.")
         else:
-            from app.parsers.craigslist_scraper import CraigslistScraper
+            from parsers.craigslist_scraper import CraigslistScraper
             scraper = CraigslistScraper(
                 zenrows_api_key=api_key,
                 anthropic_api_key=os.environ.get("ANTHROPIC_API_KEY"),
