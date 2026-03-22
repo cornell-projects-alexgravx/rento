@@ -314,7 +314,7 @@ async def seed(db: AsyncSession) -> None:
         apt = random.choice(apartment_objs)
         apt_name = apt_name_map[apt.id]
         hood = hood_map.get(apt_neighbor_map.get(apt.id, ""), "NYC")
-        notif_type, template = NOTIFICATION_MESSAGES[i]
+        notif_type, template = random.choice(NOTIFICATION_MESSAGES)
         old_price = apt.price + random.randint(100, 400)
         new_price = apt.price
         content = template.format(

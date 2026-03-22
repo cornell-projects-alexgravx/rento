@@ -23,15 +23,28 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql+asyncpg://rento:rento@db:5432/rento
+      SMTP_HOST: mailhog
+      SMTP_PORT: "1025"
+      SMTP_FROM: rento@localhost
+      SMTP_USE_TLS: "false"
     depends_on:
       db:
         condition: service_healthy
+      mailhog:
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  mailhog:
+    image: mailhog/mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
 
 volumes:
   pgdata:

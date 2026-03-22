@@ -33,7 +33,7 @@ class Agent1LogUpdate(BaseModel):
 # --- Agent2Log ---
 
 class Agent2LogBase(BaseModel):
-    apartment_id: str
+    user_id: str
     content: str
     result: Optional[str] = None
 

@@ -50,9 +50,6 @@ class Apartment(Base):
     agent1_logs: Mapped[list["Agent1Log"]] = relationship(
         "Agent1Log", back_populates="apartment", cascade="all, delete-orphan"
     )
-    agent2_logs: Mapped[list["Agent2Log"]] = relationship(
-        "Agent2Log", back_populates="apartment", cascade="all, delete-orphan"
-    )
     agent3_logs: Mapped[list["Agent3Log"]] = relationship(
         "Agent3Log", back_populates="apartment"
     )

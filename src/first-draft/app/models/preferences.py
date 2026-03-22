@@ -12,7 +12,7 @@ class ObjectivePreferences(Base):
     __tablename__ = "objective_preferences"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     bedroom_type: Mapped[str] = mapped_column(String, nullable=False)
     selected_areas: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
     min_budget: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -35,7 +35,7 @@ class SubjectivePreferences(Base):
     __tablename__ = "subjective_preferences"
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id: Mapped[str] = mapped_column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     priority_focus: Mapped[str | None] = mapped_column(String, nullable=True)
     image_labels: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
     neighborhood_labels: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
