@@ -12,7 +12,9 @@ class User(Base):
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     name: Mapped[str] = mapped_column(String, nullable=False)
-    phone: Mapped[str] = mapped_column(String, nullable=False)
+    phone: Mapped[str] = mapped_column(String, nullable=True)
+    email: Mapped[str | None] = mapped_column(String, nullable=True, unique=True, index=True)
+    hashed_password: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
 
     objective_preferences: Mapped[list["ObjectivePreferences"]] = relationship(

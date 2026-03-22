@@ -259,6 +259,10 @@ def build_agent3_graph(session: AsyncSession):
         for _ in range(3):
             await asyncio.sleep(poll_interval_seconds)
 
+            # Expire the session cache so we see rows committed by other
+            # sessions (e.g. inject-email-reply) since the last query.
+            session.expire_all()
+
             result = await session.execute(
                 select(Message)
                 .where(
@@ -304,7 +308,13 @@ def build_agent3_graph(session: AsyncSession):
                 max_tokens=256,
                 messages=[{"role": "user", "content": prompt}],
             )
-            parsed = json.loads(response.content[0].text.strip())
+            raw = response.content[0].text.strip()
+            # Claude sometimes wraps JSON in markdown code fences; strip them.
+            if raw.startswith("```"):
+                raw = raw.split("```")[1]
+                if raw.startswith("json"):
+                    raw = raw[4:]
+            parsed = json.loads(raw.strip())
             analysis = parsed.get("analysis", "rejected")
             summary = parsed.get("summary", "")
             new_history = list(state.get("conversation_history", []))
@@ -374,20 +384,35 @@ def build_agent3_graph(session: AsyncSession):
             location=apt["name"],
         )
 
+        ics_subject = f"Visit Confirmed — {apt['name']}"
+        ics_body = (
+            f"Dear Host,\n\nThis email confirms our apartment visit on "
+            f"{visit_dt.strftime('%A, %B %d at %I:%M %p')}.\n\n"
+            f"Renter: {user['name']}\n\n"
+            "Please find the calendar invite attached.\n\nBest regards,\nRento"
+        )
+
         try:
             send_email(
                 to=apt["host_email"],
-                subject=f"Visit Confirmed — {apt['name']}",
-                body=(
-                    f"Dear Host,\n\nThis email confirms our apartment visit on "
-                    f"{visit_dt.strftime('%A, %B %d at %I:%M %p')}.\n\n"
-                    f"Renter: {user['name']}\n\n"
-                    "Please find the calendar invite attached.\n\nBest regards,\nRento"
-                ),
+                subject=ics_subject,
+                body=ics_body,
                 attachments=[("visit.ics", ics_bytes)],
             )
         except Exception as exc:
             return {"error": f"Failed to send ICS: {exc}"}
+
+        # Record the ICS confirmation in the messages table so the DB stays
+        # in sync with what Mailpit captured via SMTP.
+        ics_msg = Message(
+            id=str(uuid.uuid4()),
+            match_id=state["match_id"],
+            type="agent",
+            timestamp=datetime.utcnow(),
+            text=ics_body,
+        )
+        session.add(ics_msg)
+        await session.commit()
 
         return {}
 
@@ -396,6 +421,7 @@ def build_agent3_graph(session: AsyncSession):
         match: Match | None = await session.get(Match, state["match_id"])
         if match:
             match.status = "completed"
+            session.add(match)
 
         notif = Notification(
             id=str(uuid.uuid4()),
@@ -417,6 +443,7 @@ def build_agent3_graph(session: AsyncSession):
         match: Match | None = await session.get(Match, state["match_id"])
         if match:
             match.status = "not_started"
+            session.add(match)
 
         reason_map = {
             "rejected": "The host declined your inquiry.",

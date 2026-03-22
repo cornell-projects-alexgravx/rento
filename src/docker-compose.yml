@@ -16,12 +16,22 @@ services:
       timeout: 5s
       retries: 10
 
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI → http://localhost:8025
+
   api:
-    build: .
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     restart: unless-stopped
     env_file: .env
     environment:
       DATABASE_HOST: db
+      SMTP_HOST: mailpit
     ports:
       - "8000:8000"
     depends_on:
@@ -36,12 +46,18 @@ services:
       retries: 5
       start_period: 15s
 
-  mailpit:
-    image: axllent/mailpit
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     restart: unless-stopped
     ports:
-      - "1025:1025"
-      - "8025:8025"
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
 
 volumes:
   pgdata:

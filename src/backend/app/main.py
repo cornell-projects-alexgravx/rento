@@ -21,6 +21,16 @@ from app.routers import (
     notifications,
 )
 from app.routers import agents
+
+# v1 bridge routers
+from app.routers.v1 import auth as v1_auth
+from app.routers.v1 import preferences as v1_preferences
+from app.routers.v1 import listings as v1_listings
+from app.routers.v1 import negotiations as v1_negotiations
+from app.routers.v1 import agent as v1_agent
+from app.routers.v1 import notifications as v1_notifications
+from app.routers.v1 import tours as v1_tours
+
 from app.agents.agent1_image import run_agent1_batch
 from app.constants import CORS_ORIGINS
 
@@ -74,6 +84,19 @@ app.include_router(agent_logs.router)
 app.include_router(messages.router)
 app.include_router(notifications.router)
 app.include_router(agents.router)
+
+# ---------------------------------------------------------------------------
+# v1 bridge layer — all routes under /api/v1
+# ---------------------------------------------------------------------------
+_V1_PREFIX = "/api/v1"
+
+app.include_router(v1_auth.router, prefix=_V1_PREFIX)
+app.include_router(v1_preferences.router, prefix=_V1_PREFIX)
+app.include_router(v1_listings.router, prefix=_V1_PREFIX)
+app.include_router(v1_negotiations.router, prefix=_V1_PREFIX)
+app.include_router(v1_agent.router, prefix=_V1_PREFIX)
+app.include_router(v1_notifications.router, prefix=_V1_PREFIX)
+app.include_router(v1_tours.router, prefix=_V1_PREFIX)
 
 
 @app.get("/health", tags=["health"])

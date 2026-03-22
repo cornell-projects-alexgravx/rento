@@ -26,7 +26,7 @@ from app.models.user import User
 from app.agents.agent1_image import is_agent1_running, run_agent1, run_agent1_batch
 from app.agents.agent2_recommend import run_agent2
 from app.agents.agent3_outreach import run_agent3
-from app.constants import DEBUG
+from app.constants import DEBUG, SMTP_FROM
 
 router = APIRouter(prefix="/agents", tags=["agents"])
 
@@ -306,15 +306,19 @@ async def simulate_host_reply(
     db: AsyncSession = Depends(get_db),
     _: None = Depends(require_debug),
 ) -> dict:
-    """DEV ONLY: Insert a Message(type='host') row to simulate a host reply.
+    """DEV ONLY: Insert a Message(type='host') row and send a visible SMTP email.
 
-    Agent 3 polls the messages table for host replies during its negotiation
-    loop. This endpoint lets you inject a reply without real email infrastructure,
-    enabling end-to-end testing of the negotiation cycle.
+    Writes to both the messages table (so Agent 3's poll loop picks it up) and
+    sends via SMTP (so the reply is visible in the Mailpit UI alongside the
+    agent's outbound emails). Mailpit and the DB are always kept in sync.
     """
     match = await db.get(Match, match_id)
     if not match:
         raise HTTPException(status_code=404, detail="Match not found")
+
+    apt = await db.get(Apartment, match.apartment_id)
+    if not apt:
+        raise HTTPException(status_code=404, detail="Apartment not found")
 
     msg = Message(
         id=str(uuid.uuid4()),
@@ -325,4 +329,98 @@ async def simulate_host_reply(
     )
     db.add(msg)
     await db.commit()
+
+    subject = f"Re: Apartment Inquiry: {apt.name}"
+    try:
+        import asyncio
+
+        await asyncio.get_running_loop().run_in_executor(
+            None,
+            lambda: _send_host_reply(
+                to=SMTP_FROM,
+                from_addr=apt.host_email or "host@rento.local",
+                subject=subject,
+                body=body.text,
+            ),
+        )
+    except Exception:
+        # SMTP failure is non-fatal: the DB row is committed and the agent
+        # will still process the reply. Log but don't roll back.
+        pass
+
     return {"message": "Host reply simulated", "message_id": msg.id}
+
+
+@router.post("/dev/matches/{match_id}/inject-email-reply", status_code=201)
+async def inject_email_reply(
+    match_id: str,
+    body: HostReplyRequest,
+    db: AsyncSession = Depends(get_db),
+    _: None = Depends(require_debug),
+) -> dict:
+    """DEV ONLY: Send a real SMTP email AND insert a Message(type='host') row.
+
+    Keeps Mailpit and the DB in sync: the reply appears in the Mailpit UI
+    (via SMTP) and Agent 3's poll loop picks it up (via the messages table).
+    """
+    match = await db.get(Match, match_id)
+    if not match:
+        raise HTTPException(status_code=404, detail="Match not found")
+
+    apt = await db.get(Apartment, match.apartment_id)
+    if not apt:
+        raise HTTPException(status_code=404, detail="Apartment not found")
+
+    subject = f"Re: Apartment Inquiry: {apt.name}"
+    from_addr = apt.host_email or "host@rento.local"
+
+    try:
+        import asyncio
+
+        await asyncio.get_running_loop().run_in_executor(
+            None,
+            lambda: _send_host_reply(
+                to=SMTP_FROM,
+                from_addr=from_addr,
+                subject=subject,
+                body=body.text,
+            ),
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"SMTP send failed: {exc}") from exc
+
+    msg = Message(
+        id=str(uuid.uuid4()),
+        match_id=match_id,
+        type="host",
+        timestamp=datetime.utcnow(),
+        text=body.text,
+    )
+    db.add(msg)
+    await db.commit()
+
+    return {
+        "message": "Host reply injected",
+        "message_id": msg.id,
+        "subject": subject,
+        "to": SMTP_FROM,
+        "from": from_addr,
+    }
+
+
+def _send_host_reply(to: str, from_addr: str, subject: str, body: str) -> None:
+    """Send an email impersonating the host. Used only by the dev injection endpoints."""
+    import smtplib
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+
+    from app.constants import SMTP_HOST, SMTP_PORT
+
+    msg = MIMEMultipart()
+    msg["From"] = from_addr
+    msg["To"] = to
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body, "plain"))
+
+    with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+        server.sendmail(from_addr, to, msg.as_string())

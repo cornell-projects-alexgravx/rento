@@ -41,13 +41,19 @@ SMTP_FROM: str = os.getenv("SMTP_FROM", "rento@localhost")
 
 CORS_ORIGINS: list[str] = [
     o.strip()
-    for o in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+    for o in os.getenv(
+        "CORS_ORIGINS",
+        "http://localhost:3000,http://localhost:5173,http://frontend:5173",
+    ).split(",")
     if o.strip()
 ]
 
 # ── Security ───────────────────────────────────────────────────────────────────
 
 DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
+JWT_SECRET: str = os.getenv("JWT_SECRET", "change-me-in-production-please")
+JWT_ALGORITHM: str = "HS256"
+JWT_EXPIRE_HOURS: int = int(os.getenv("JWT_EXPIRE_HOURS", "168"))  # 7 days
 
 # ── Agent 3 ────────────────────────────────────────────────────────────────────
 
