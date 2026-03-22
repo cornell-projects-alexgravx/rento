@@ -16,7 +16,6 @@ which inserts a Message(type="host") row that this agent polls.
 
 import asyncio
 import json
-import os
 import uuid
 from datetime import date, datetime, timedelta
 from typing import Optional
@@ -27,6 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing_extensions import TypedDict
 
 from app.agents.shared.claude_client import MODEL, get_claude_client
+from app.constants import AGENT3_MAX_ROUNDS, AGENT3_POLL_INTERVAL_S
 from app.agents.shared.ics_generator import generate_ics
 from app.agents.shared.smtp_client import send_email
 from app.models.agent_logs import Agent3Log
@@ -68,8 +68,8 @@ def build_agent3_graph(session: AsyncSession):
     Returns:
         A compiled LangGraph graph ready for ``ainvoke``.
     """
-    max_rounds = int(os.getenv("AGENT3_MAX_NEGOTIATION_ROUNDS", "5"))
-    poll_interval_seconds = int(os.getenv("AGENT3_REPLY_POLL_INTERVAL_SECONDS", "1800"))
+    max_rounds = AGENT3_MAX_ROUNDS
+    poll_interval_seconds = AGENT3_POLL_INTERVAL_S
 
     async def fetch_context(state: Agent3State) -> dict:
         match: Match | None = await session.get(Match, state["match_id"])
@@ -453,7 +453,7 @@ async def run_agent3(match_id: str) -> None:
             "user": {},
             "negotiation_prefs": {},
             "round_number": 0,
-            "max_rounds": int(os.getenv("AGENT3_MAX_NEGOTIATION_ROUNDS", "5")),
+            "max_rounds": AGENT3_MAX_ROUNDS,
             "conversation_history": [],
             "email_subject": "",
             "email_draft": None,

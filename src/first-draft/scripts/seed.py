@@ -1,5 +1,5 @@
 import sys
-import os
+import os  # noqa: E402 — needed for sys.path before app imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import asyncio
@@ -7,15 +7,9 @@ import random
 import uuid
 from datetime import date, datetime, timedelta
 
-from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-load_dotenv()
-
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "postgresql+asyncpg://rento:rento@localhost:5432/rento",
-)
+from app.constants import DATABASE_URL
 
 # Import Base and all models so metadata is populated
 from app.database import Base  # noqa: E402

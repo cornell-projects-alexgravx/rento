@@ -5,7 +5,6 @@ per-resource agent status. Also provides a dev-only endpoint for
 simulating host replies during Agent 3 testing.
 """
 
-import os
 import uuid
 from datetime import datetime
 
@@ -26,6 +25,7 @@ from app.models.user import User
 from app.agents.agent1_image import run_agent1, run_agent1_batch
 from app.agents.agent2_recommend import run_agent2
 from app.agents.agent3_outreach import run_agent3
+from app.constants import DEBUG
 
 router = APIRouter(prefix="/agents", tags=["agents"])
 
@@ -41,9 +41,6 @@ limiter = Limiter(key_func=get_remote_address)
 # OWASP A05:2021 Security Misconfiguration — debug surfaces must not be
 # reachable in production.
 # ---------------------------------------------------------------------------
-_DEBUG = os.getenv("DEBUG", "false").lower() == "true"
-
-
 async def require_debug() -> None:
     """Raise HTTP 404 when DEBUG env var is not set to 'true'.
 
@@ -51,7 +48,7 @@ async def require_debug() -> None:
     to non-development callers (security through obscurity as a secondary
     control, not a primary one).
     """
-    if not _DEBUG:
+    if not DEBUG:
         raise HTTPException(status_code=404, detail="Not found")
 
 

@@ -1,4 +1,3 @@
-import os
 import re
 import smtplib
 import ssl
@@ -6,6 +5,15 @@ from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+
+from app.constants import (
+    SMTP_FROM,
+    SMTP_HOST,
+    SMTP_PASSWORD,
+    SMTP_PORT,
+    SMTP_USE_TLS,
+    SMTP_USERNAME,
+)
 
 
 def _sanitize_header(value: str) -> str:
@@ -45,12 +53,12 @@ def send_email(
         body: Plain-text email body.
         attachments: Optional list of (filename, bytes) tuples to attach.
     """
-    host = os.getenv("SMTP_HOST", "localhost")
-    port = int(os.getenv("SMTP_PORT", "1025"))
-    use_tls = os.getenv("SMTP_USE_TLS", "false").lower() == "true"
-    username = os.getenv("SMTP_USERNAME", "")
-    password = os.getenv("SMTP_PASSWORD", "")
-    from_addr = os.getenv("SMTP_FROM", "rento@localhost")
+    host = SMTP_HOST
+    port = SMTP_PORT
+    use_tls = SMTP_USE_TLS
+    username = SMTP_USERNAME
+    password = SMTP_PASSWORD
+    from_addr = SMTP_FROM
 
     # Sanitize headers that may carry external or Claude-generated content.
     # The `to` address comes from the DB (apt.host_email), but we sanitize

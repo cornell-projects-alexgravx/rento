@@ -1,4 +1,3 @@
-import os
 from contextlib import asynccontextmanager
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -23,6 +22,7 @@ from app.routers import (
 )
 from app.routers import agents
 from app.agents.agent1_image import run_agent1_batch
+from app.constants import CORS_ORIGINS
 
 
 @asynccontextmanager
@@ -57,12 +57,9 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # Read a comma-separated CORS_ORIGINS env var; fall back to localhost:3000.
 # OWASP A05:2021 Security Misconfiguration.
 # ---------------------------------------------------------------------------
-_raw_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000")
-cors_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins,
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

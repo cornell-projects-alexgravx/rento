@@ -6,6 +6,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from app.constants import DATABASE_URL
 from scripts.seed import main as seed_main
 
 
@@ -13,8 +14,7 @@ async def db_user_count() -> int:
     from sqlalchemy import text
     from sqlalchemy.ext.asyncio import create_async_engine
 
-    url = os.getenv("DATABASE_URL", "postgresql+asyncpg://rento:rento@localhost:5432/rento")
-    engine = create_async_engine(url, echo=False)
+    engine = create_async_engine(DATABASE_URL, echo=False)
     try:
         async with engine.connect() as conn:
             result = await conn.execute(text("SELECT COUNT(*) FROM users"))
