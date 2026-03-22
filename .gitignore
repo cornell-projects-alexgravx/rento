@@ -5,6 +5,7 @@ node_modules/
 .env
 src/backend/credentials.json
 src/backend/token.json
+src/backend/*.eml
 
 # Python
 __pycache__/
