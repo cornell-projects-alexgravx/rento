@@ -1,544 +1,400 @@
 import { useState } from 'react'
-import {
-  Search, Filter, MessageSquare, Bell, Play, Pause,
-  CheckCircle2, Clock, Info, ChevronDown,
-  Bot, Settings, Globe, Brain, Send, Image,
-  ArrowRight, Building2, Sparkles,
-  TrendingDown, XCircle,
-} from 'lucide-react'
+import { BedDouble, Bath, Maximize2 } from 'lucide-react'
+import bellIcon from '../../assets/image/bell.svg'
 import { useStore } from '../../store/useStore'
-import { Button } from '../../components/ui/button'
-import { Slider } from '../../components/ui/slider'
-import { Switch } from '../../components/ui/switch'
 import { cn } from '../../lib/utils'
+import { formatCurrency } from '../../lib/utils'
+import type { Listing, Notification } from '../../types'
+import logosImg from '../../assets/image/logos.png'
+import googleCalendarImg from '../../assets/image/googlecalendar.png'
+import successIcon from '../../assets/image/success.svg'
+import errorIcon from '../../assets/image/error.svg'
+import workingIcon from '../../assets/image/working.svg'
 
 /* ─────────────────────────────────────────
-   Mock data — Search stage
-───────────────────────────────────────── */
-const SOURCES = [
-  { name: 'Zillow', icon: '🏠', count: 512, type: 'API' },
-  { name: 'Apartments.com', icon: '🏢', count: 341, type: 'API' },
-  { name: 'Craigslist SF', icon: '📋', count: 218, type: 'Scraper' },
-  { name: 'Realtor.com', icon: '🔑', count: 169, type: 'API' },
-]
-
-const IMAGE_LOGS = [
-  { id: 1, time: '09:00:01', apt: 'lst-001 · 450 Brannan St', tags: ['modern', 'spacious', 'industrial'], done: true },
-  { id: 2, time: '09:00:03', apt: 'lst-002 · 2300 Mission St', tags: ['cozy', 'warm-toned', 'vintage'], done: true },
-  { id: 3, time: '09:00:06', apt: 'lst-003 · 501 Fell St', tags: ['bright', 'minimal', 'airy'], done: true },
-  { id: 4, time: '09:00:09', apt: 'lst-004 · 88 King St', tags: ['luxury', 'high-ceiling', 'contemporary'], done: true },
-  { id: 5, time: '09:00:12', apt: 'lst-005 · 340 Fremont St', tags: ['dated', 'compact', 'functional'], done: true },
-  { id: 6, time: '09:10:01', apt: 'lst-New-A · 222 2nd St', tags: ['open-plan', 'new-build'], done: false },
-]
-
-/* ─────────────────────────────────────────
-   Mock data — Filtering stage
-───────────────────────────────────────── */
-type FilterEntry =
-  | { kind: 'rule'; id: number; time: string; rule: string; input: string; output: string }
-  | { kind: 'apt'; id: number; time: string; apt: string; reason: string; result: 'in' | 'out' }
-
-const FILTER_LOGS: FilterEntry[] = [
-  { kind: 'rule', id: 1, time: '09:00:07', rule: 'Budget $1,500–$3,500/mo', input: '1,240', output: '847' },
-  { kind: 'rule', id: 2, time: '09:00:09', rule: 'Commute ≤30 min (transit)', input: '847', output: '312' },
-  { kind: 'apt',  id: 3, time: '09:00:10', apt: 'lst-021', reason: '$4,200/mo exceeds budget by $700', result: 'out' },
-  { kind: 'apt',  id: 4, time: '09:00:11', apt: 'lst-034', reason: '45 min commute — exceeds 30 min limit', result: 'out' },
-  { kind: 'apt',  id: 5, time: '09:00:11', apt: 'lst-002 · Mission St', reason: '18 min BART, $2,400/mo, pet-friendly ✓', result: 'in' },
-  { kind: 'apt',  id: 6, time: '09:00:12', apt: 'lst-003 · Fell St', reason: 'Studio, 12 min bus, recent $50 price drop', result: 'in' },
-  { kind: 'rule', id: 7, time: '09:00:13', rule: 'Match score > 70%', input: '312', output: '7' },
-]
-
-const PREF_KEYWORDS = ['$1,500–$3,500', 'SF Bay Area', '≤30 min commute', 'Pets OK', 'In-unit laundry', '1–2 BR']
-
-/* ─────────────────────────────────────────
-   Mock data — Negotiation stage
-───────────────────────────────────────── */
-type NegEntry = {
-  id: number
-  time: string
-  apt: string
-  landlord: string
-  thinking?: string
-  message: string
-  type: 'sent' | 'received'
-  outcome?: string
-}
-
-const NEG_LOGS: NegEntry[] = [
-  {
-    id: 1, time: '09:01:02', apt: 'lst-003 · 501 Fell St', landlord: 'Hayes Valley Partners',
-    thinking: 'Price dropped to $1,950 — well within $3,500 budget. Focus on lease flexibility and move-in date.',
-    message: 'Hi! My client is highly interested in the studio at 501 Fell. Would you consider a 12-month lease starting April 1st?',
-    type: 'sent',
-  },
-  {
-    id: 2, time: '09:01:45', apt: 'lst-003 · 501 Fell St', landlord: 'Hayes Valley Partners',
-    message: "Thanks for reaching out! We just dropped the price to $1,950. Is your client flexible on move-in?",
-    type: 'received',
-  },
-  {
-    id: 3, time: '09:02:10', apt: 'lst-002 · 2300 Mission St', landlord: 'Rosa M. Herrera',
-    thinking: 'Asking $2,400/mo. Target $2,350. Waived pet deposit (~$500) is a better alternative to a direct discount.',
-    message: 'Hello Rosa! My client loves the 1BR at 2300 Mission. Given a 12-month lease, could we discuss the pet deposit?',
-    type: 'sent',
-  },
-  {
-    id: 4, time: '09:03:30', apt: 'lst-002 · 2300 Mission St', landlord: 'Rosa M. Herrera',
-    message: "I can do $2,350/mo with one month's deposit — and I'll waive the pet deposit if they're responsible.",
-    type: 'received',
-    outcome: '$2,350/mo · pet fee waived · saved ~$500',
-  },
-]
-
-/* ─────────────────────────────────────────
-   Shared: stage header
-───────────────────────────────────────── */
-function StageHeader({
-  step, icon: Icon, label, sub, statLabel, statValue, color,
-}: {
-  step: number
-  icon: React.ElementType
-  label: string
-  sub: string
-  statLabel: string
-  statValue: string
-  color: 'indigo' | 'sky' | 'violet' | 'amber'
-}) {
-  const palette = {
-    indigo: { bg: 'bg-indigo-900/20', border: 'border-indigo-800', icon: 'bg-indigo-500', text: 'text-indigo-300', badge: 'bg-indigo-900/50 text-indigo-300' },
-    sky:    { bg: 'bg-sky-900/20',    border: 'border-sky-800',    icon: 'bg-sky-500',    text: 'text-sky-300',    badge: 'bg-sky-900/50 text-sky-300' },
-    violet: { bg: 'bg-violet-900/20', border: 'border-violet-800', icon: 'bg-violet-500', text: 'text-violet-300', badge: 'bg-violet-900/50 text-violet-300' },
-    amber:  { bg: 'bg-amber-900/20',  border: 'border-amber-800',  icon: 'bg-amber-500',  text: 'text-amber-300',  badge: 'bg-amber-900/50 text-amber-300' },
-  }[color]
-
-  return (
-    <div className={cn('shrink-0 px-4 py-3 border-b', palette.bg, palette.border)}>
-      <div className="flex items-center gap-2.5">
-        <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center shrink-0', palette.icon)}>
-          <Icon size={14} className="text-white" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className={cn('text-[10px] font-bold', palette.text)}>STEP {step}</span>
-            <span className="font-semibold text-sm text-[#010205] dark:text-white">{label}</span>
-          </div>
-          <p className="text-[10px] text-[#6B6B6B] leading-none mt-0.5">{sub}</p>
-        </div>
-        <div className={cn('shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold', palette.badge)}>
-          {statValue}
-          <span className="font-normal ml-0.5 opacity-70">{statLabel}</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* ─────────────────────────────────────────
-   Shared: log timestamp
-───────────────────────────────────────── */
-function Ts({ v }: { v: string }) {
-  return <span className="text-[9px] text-[#6B6B6B] font-mono shrink-0 mt-px">{v.slice(0, 5)}</span>
-}
-
-/* ─────────────────────────────────────────
-   1. Search Stage
-───────────────────────────────────────── */
-function SearchStage() {
-  return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <StageHeader
-        step={1} icon={Search} label="Search" sub="Data collection &amp; ingestion"
-        statLabel=" apts" statValue="1,240" color="indigo"
-      />
-      <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-3">
-
-        {/* Data coverage */}
-        <div className="bg-white dark:bg-[#0F0F0F] rounded-xl border border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] p-3">
-          <p className="text-[10px] font-semibold text-[#6B6B6B] uppercase tracking-wider mb-2">Data Coverage</p>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { label: 'Scanned', value: '1,240', sub: 'active listings', color: 'text-indigo-600 dark:text-yellow-400' },
-              { label: 'New today', value: '+38', sub: 'since last scan', color: 'text-emerald-600 dark:text-emerald-400' },
-              { label: 'Updated', value: '91', sub: 'price changes', color: 'text-amber-600 dark:text-amber-400' },
-              { label: 'Removed', value: '14', sub: 'no longer listed', color: 'text-red-500' },
-            ].map(({ label, value, sub, color }) => (
-              <div key={label} className="bg-[#F0F0F1]/40 dark:bg-[#1A1A1A]/40 rounded-lg p-2">
-                <div className={cn('text-lg font-bold leading-tight', color)}>{value}</div>
-                <div className="text-[10px] font-medium text-[#4A4A4A] dark:text-yellow-400/70 leading-tight">{label}</div>
-                <div className="text-[9px] text-[#6B6B6B] leading-tight">{sub}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Sources */}
-        <div className="bg-white dark:bg-[#0F0F0F] rounded-xl border border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] p-3">
-          <div className="flex items-center gap-1.5 mb-2">
-            <Globe size={11} className="text-[#6B6B6B]" />
-            <p className="text-[10px] font-semibold text-[#6B6B6B] uppercase tracking-wider">Sources</p>
-          </div>
-          <div className="space-y-1.5">
-            {SOURCES.map(s => (
-              <div key={s.name} className="flex items-center gap-2">
-                <span className="text-sm">{s.icon}</span>
-                <span className="flex-1 text-xs text-[#1A1A1F] dark:text-yellow-400/70 font-medium">{s.name}</span>
-                <span className={cn(
-                  'text-[9px] px-1.5 py-0.5 rounded-full font-medium',
-                  s.type === 'API' ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-yellow-400' : 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
-                )}>{s.type}</span>
-                <span className="text-[10px] text-[#6B6B6B] w-10 text-right">{s.count}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Image Analysis Agent Log */}
-        <div className="bg-white dark:bg-[#0F0F0F] rounded-xl border border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] overflow-hidden">
-          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] bg-[#F0F0F1]/60 dark:bg-[#1A1A1A]/60">
-            <Image size={11} className="text-indigo-500" />
-            <p className="text-[10px] font-semibold text-[#4A4A4A] dark:text-yellow-400/60 uppercase tracking-wider">Image Analysis Agent</p>
-          </div>
-          <div className="divide-y divide-[rgba(1,2,5,0.08)] dark:divide-[rgba(255,215,0,0.08)]">
-            {IMAGE_LOGS.map(log => (
-              <div key={log.id} className="px-3 py-2">
-                <div className="flex items-start gap-1.5 mb-1">
-                  <Ts v={log.time} />
-                  {log.done
-                    ? <CheckCircle2 size={10} className="text-emerald-500 mt-0.5 shrink-0" />
-                    : <Clock size={10} className="text-amber-400 mt-0.5 shrink-0 animate-pulse" />
-                  }
-                  <span className="text-[10px] text-[#4A4A4A] dark:text-yellow-400/60 leading-tight font-medium">{log.apt}</span>
-                </div>
-                <div className="flex flex-wrap gap-1 pl-8">
-                  {log.tags.map(tag => (
-                    <span key={tag} className="text-[9px] px-1.5 py-0.5 rounded-full bg-indigo-50 dark:bg-yellow-400/10 text-indigo-600 dark:text-yellow-400 font-medium">{tag}</span>
-                  ))}
-                  {!log.done && <span className="text-[9px] text-amber-500 animate-pulse">analyzing…</span>}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-      </div>
-    </div>
-  )
-}
-
-/* ─────────────────────────────────────────
-   2. Filtering Stage
-───────────────────────────────────────── */
-function FilteringStage() {
-  return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <StageHeader
-        step={2} icon={Filter} label="Filtering" sub="Preference-based screening"
-        statLabel=" passed" statValue="7" color="sky"
-      />
-      <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-3">
-
-        {/* Preference status */}
-        <div className="bg-white dark:bg-[#0F0F0F] rounded-xl border border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] p-3">
-          <div className="flex items-start gap-1.5 mb-2.5">
-            <Sparkles size={11} className="text-sky-500 mt-0.5 shrink-0" />
-            <p className="text-[10px] text-[#6B6B6B] dark:text-yellow-400/60 leading-relaxed italic">
-              Taking your preferences into consideration…
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {PREF_KEYWORDS.map(kw => (
-              <span key={kw} className="text-[9px] px-2 py-0.5 rounded-full bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300 font-medium border border-sky-200 dark:border-sky-700">{kw}</span>
-            ))}
-          </div>
-        </div>
-
-        {/* Filter log */}
-        <div className="bg-white dark:bg-[#0F0F0F] rounded-xl border border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] overflow-hidden">
-          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] bg-[#F0F0F1]/60 dark:bg-[#1A1A1A]/60">
-            <Filter size={11} className="text-sky-500" />
-            <p className="text-[10px] font-semibold text-[#4A4A4A] dark:text-yellow-400/60 uppercase tracking-wider">Filtering Log</p>
-          </div>
-          <div className="divide-y divide-[rgba(1,2,5,0.08)] dark:divide-[rgba(255,215,0,0.08)]">
-            {FILTER_LOGS.map(entry => (
-              <div key={entry.id} className="px-3 py-2">
-                {entry.kind === 'rule' ? (
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <Ts v={entry.time} />
-                      <Info size={9} className="text-sky-400 shrink-0" />
-                      <span className="text-[10px] font-semibold text-[#1A1A1F] dark:text-yellow-400/70">{entry.rule}</span>
-                    </div>
-                    <div className="flex items-center gap-1 pl-8 mt-0.5">
-                      <span className="text-[9px] text-[#6B6B6B]">{entry.input}</span>
-                      <ArrowRight size={8} className="text-[#9A9A9A]" />
-                      <span className="text-[9px] font-bold text-sky-600 dark:text-sky-400">{entry.output}</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-start gap-1.5">
-                    <Ts v={entry.time} />
-                    {entry.result === 'in'
-                      ? <CheckCircle2 size={10} className="text-emerald-500 mt-0.5 shrink-0" />
-                      : <XCircle size={10} className="text-red-400 mt-0.5 shrink-0" />
-                    }
-                    <div>
-                      <span className={cn(
-                        'text-[10px] font-semibold',
-                        entry.result === 'in' ? 'text-emerald-700 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
-                      )}>
-                        {entry.result === 'in' ? '✓ Selected · ' : '✗ Filtered · '}{entry.apt}
-                      </span>
-                      <p className="text-[9px] text-[#6B6B6B] leading-tight mt-0.5">{entry.reason}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-      </div>
-    </div>
-  )
-}
-
-/* ─────────────────────────────────────────
-   3. Negotiation Stage
-───────────────────────────────────────── */
-function NegotiationStage() {
-  const [expandThinking, setExpandThinking] = useState<number | null>(null)
-
-  return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <StageHeader
-        step={3} icon={MessageSquare} label="Negotiation" sub="Automated landlord outreach"
-        statLabel=" active" statValue="3" color="violet"
-      />
-      <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-3">
-
-        {/* Overview stats */}
-        <div className="bg-white dark:bg-[#0F0F0F] rounded-xl border border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] p-3">
-          <p className="text-[10px] font-semibold text-[#6B6B6B] uppercase tracking-wider mb-2">Overview</p>
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              { label: 'Ongoing', value: '3', color: 'text-violet-600 dark:text-violet-400' },
-              { label: 'Success', value: '87%', color: 'text-emerald-600 dark:text-emerald-400' },
-              { label: 'Avg. reply', value: '41m', color: 'text-[#4A4A4A] dark:text-yellow-400/70' },
-            ].map(({ label, value, color }) => (
-              <div key={label} className="bg-[#F0F0F1]/40 dark:bg-[#1A1A1A]/40 rounded-lg p-2 text-center">
-                <div className={cn('text-base font-bold', color)}>{value}</div>
-                <div className="text-[9px] text-[#6B6B6B]">{label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Negotiation log */}
-        <div className="bg-white dark:bg-[#0F0F0F] rounded-xl border border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] overflow-hidden">
-          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] bg-[#F0F0F1]/60 dark:bg-[#1A1A1A]/60">
-            <MessageSquare size={11} className="text-violet-500" />
-            <p className="text-[10px] font-semibold text-[#4A4A4A] dark:text-yellow-400/60 uppercase tracking-wider">Negotiation Log</p>
-          </div>
-          <div className="divide-y divide-[rgba(1,2,5,0.08)] dark:divide-[rgba(255,215,0,0.08)]">
-            {NEG_LOGS.map(entry => (
-              <div key={entry.id} className="p-3 space-y-1.5">
-                {/* Header */}
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <Ts v={entry.time} />
-                  <Building2 size={9} className="text-[#6B6B6B] shrink-0" />
-                  <span className="text-[10px] font-semibold text-[#1A1A1F] dark:text-yellow-400/70 leading-tight">{entry.apt}</span>
-                </div>
-                <div className="text-[9px] text-[#6B6B6B]">Landlord: {entry.landlord}</div>
-
-                {/* Thinking (collapsible) */}
-                {entry.thinking && (
-                  <button
-                    onClick={() => setExpandThinking(expandThinking === entry.id ? null : entry.id)}
-                    className="w-full flex items-start gap-1.5 text-left"
-                  >
-                    <Brain size={9} className="text-violet-400 mt-0.5 shrink-0" />
-                    <span className={cn(
-                      'text-[9px] text-violet-600 dark:text-violet-400 italic leading-relaxed',
-                      expandThinking !== entry.id && 'line-clamp-1'
-                    )}>
-                      {entry.thinking}
-                    </span>
-                  </button>
-                )}
-
-                {/* Message bubble */}
-                <div className={cn(
-                  'rounded-xl px-2.5 py-2 text-[10px] leading-relaxed',
-                  entry.type === 'sent'
-                    ? 'bg-violet-50 dark:bg-violet-900/30 text-violet-900 dark:text-violet-100 rounded-tl-sm'
-                    : 'bg-[#E2E2E3] text-[#4A4A4A] dark:bg-[#1A1A1A] dark:text-yellow-400/70 rounded-tr-sm'
-                )}>
-                  <div className="flex items-center gap-1 mb-0.5 opacity-60">
-                    {entry.type === 'sent'
-                      ? <><Send size={8} /><span>Agent sent</span></>
-                      : <><MessageSquare size={8} /><span>Landlord replied</span></>
-                    }
-                  </div>
-                  {entry.message}
-                </div>
-
-                {/* Outcome badge */}
-                {entry.outcome && (
-                  <div className="flex items-center gap-1 pt-0.5">
-                    <CheckCircle2 size={10} className="text-emerald-500 shrink-0" />
-                    <span className="text-[9px] font-semibold text-emerald-700 dark:text-emerald-400">{entry.outcome}</span>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-      </div>
-    </div>
-  )
-}
-
-/* ─────────────────────────────────────────
-   4. Notification Stage
-───────────────────────────────────────── */
-function NotificationStage() {
-  const { notifications } = useStore()
-
-  const iconFor = (type: string) => {
-    if (type === 'Landlord replies') return { icon: MessageSquare, color: 'text-violet-500', bg: 'bg-violet-50 dark:bg-violet-900/30' }
-    if (type === 'Price drops') return { icon: TrendingDown, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/30' }
-    if (type === 'New matches') return { icon: Sparkles, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-yellow-400/10' }
-    return { icon: Bell, color: 'text-[#6B6B6B]', bg: 'bg-[#E2E2E3] dark:bg-[#1A1A1A]' }
-  }
-
-  return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <StageHeader
-        step={4} icon={Bell} label="Notification" sub="User communication"
-        statLabel=" unread" statValue={String(notifications.filter(n => !n.read).length)} color="amber"
-      />
-      <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-3">
-
-        {/* Summary pills */}
-        <div className="bg-white dark:bg-[#0F0F0F] rounded-xl border border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] p-3">
-          <p className="text-[10px] font-semibold text-[#6B6B6B] uppercase tracking-wider mb-2">Summary</p>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { label: 'Delivered', value: '13', color: 'text-emerald-600 dark:text-emerald-400' },
-              { label: 'Unread', value: String(notifications.filter(n => !n.read).length), color: 'text-amber-600 dark:text-amber-400' },
-              { label: 'Channels', value: '2', color: 'text-[#4A4A4A] dark:text-yellow-400/70' },
-              { label: 'Events', value: '4', color: 'text-indigo-600 dark:text-yellow-400' },
-            ].map(({ label, value, color }) => (
-              <div key={label} className="bg-[#F0F0F1]/40 dark:bg-[#1A1A1A]/40 rounded-lg p-2">
-                <div className={cn('text-base font-bold', color)}>{value}</div>
-                <div className="text-[9px] text-[#6B6B6B]">{label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Notification list */}
-        <div className="bg-white dark:bg-[#0F0F0F] rounded-xl border border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] overflow-hidden">
-          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] bg-[#F0F0F1]/60 dark:bg-[#1A1A1A]/60">
-            <Bell size={11} className="text-amber-500" />
-            <p className="text-[10px] font-semibold text-[#4A4A4A] dark:text-yellow-400/60 uppercase tracking-wider">Notification Log</p>
-          </div>
-          <div className="divide-y divide-[rgba(1,2,5,0.08)] dark:divide-[rgba(255,215,0,0.08)]">
-            {notifications.map(n => {
-              const { icon: Icon, color, bg } = iconFor(n.type)
-              const t = new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-              return (
-                <div key={n.id} className={cn('p-3 flex items-start gap-2.5', !n.read && 'bg-amber-50/40 dark:bg-amber-900/10')}>
-                  <div className={cn('w-6 h-6 rounded-lg flex items-center justify-center shrink-0 mt-0.5', bg)}>
-                    <Icon size={11} className={color} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-1">
-                      <p className="text-[10px] font-semibold text-[#1A1A1F] dark:text-yellow-400/70 leading-tight">{n.title}</p>
-                      {!n.read && <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-amber-500 mt-1" />}
-                    </div>
-                    <p className="text-[9px] text-[#6B6B6B] mt-0.5 leading-relaxed">{n.message}</p>
-                    <p className="text-[9px] text-[#9A9A9A] dark:text-slate-600 mt-1 font-mono">{t}</p>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-      </div>
-    </div>
-  )
-}
-
-/* ─────────────────────────────────────────
-   Stage id type + palette (shared)
+   Stage types
 ───────────────────────────────────────── */
 type StageId = 'search' | 'filter' | 'negotiate' | 'notify'
 
-const STAGES: { id: StageId; label: string; icon: React.ElementType; color: 'indigo' | 'sky' | 'violet' | 'amber' }[] = [
-  { id: 'search',    label: 'Search',       icon: Search,         color: 'indigo' },
-  { id: 'filter',    label: 'Filtering',    icon: Filter,         color: 'sky'    },
-  { id: 'negotiate', label: 'Negotiation',  icon: MessageSquare,  color: 'violet' },
-  { id: 'notify',    label: 'Notification', icon: Bell,           color: 'amber'  },
+const STAGES: { id: StageId; label: string }[] = [
+  { id: 'search',    label: 'Searching' },
+  { id: 'filter',    label: 'Filtering' },
+  { id: 'negotiate', label: 'Negotiating' },
+  { id: 'notify',    label: 'Notification' },
 ]
 
-const PALETTE = {
-  indigo: { pill: 'bg-indigo-500 text-white', ring: 'ring-2 ring-indigo-400 dark:ring-indigo-500', glow: 'shadow-indigo-100 dark:shadow-indigo-900/50' },
-  sky:    { pill: 'bg-sky-500 text-white',    ring: 'ring-2 ring-sky-400 dark:ring-sky-500',       glow: 'shadow-sky-100 dark:shadow-sky-900/50'     },
-  violet: { pill: 'bg-violet-500 text-white', ring: 'ring-2 ring-violet-400 dark:ring-violet-500', glow: 'shadow-violet-100 dark:shadow-violet-900/50'},
-  amber:  { pill: 'bg-amber-500 text-white',  ring: 'ring-2 ring-amber-400 dark:ring-amber-500',   glow: 'shadow-amber-100 dark:shadow-amber-900/50'  },
+/* ─────────────────────────────────────────
+   Mock data
+───────────────────────────────────────── */
+const IMAGE_LOGS = [
+  {
+    id: 1, time: '09:00', apt: 'lst-002 · 2300 Mission St',
+    desc: 'The space appears well-lit with large windows and neutral tones. The furniture layout is minimal and modern, suggesting a clean and comfortable environment.',
+    tags: ['modern', 'spacious', 'industrial'], pass: true,
+  },
+  {
+    id: 2, time: '09:00', apt: 'lst-002 · 2300 Mission St',
+    desc: 'The space appears well-lit with large windows and neutral tones. The furniture layout is minimal and modern, suggesting a clean and comfortable environment.',
+    tags: ['modern', 'spacious', 'industrial'], pass: false,
+  },
+  {
+    id: 3, time: '09:00', apt: 'lst-002 · 2300 Mission St',
+    desc: 'The space appears well-lit with large windows and neutral tones. The furniture layout is minimal and modern, suggesting a clean and comfortable environment.',
+    tags: ['modern', 'spacious', 'industrial'], pass: true,
+  },
+  {
+    id: 4, time: '09:00', apt: 'lst-002 · 2300 Mission St',
+    desc: 'The space appears well-lit with large windows and neutral tones. The furniture layout is minimal and modern, suggesting a clean and comfortable environment.',
+    tags: ['modern', 'spacious', 'industrial'], pass: true,
+  },
+]
+
+const FILTER_LOGS = [
+  {
+    id: 1, time: '09:00', apt: 'lst-002 · 2300 Mission St',
+    desc: "This apartment was selected because it matches the user's core objective preferences: it is within budget, located in the preferred area, and meets the required bedroom count. It also includes high-priority amenities such as in-unit laundry and parking, making it a strong overall fit.",
+    pass: true,
+  },
+  {
+    id: 2, time: '09:00', apt: 'lst-002 · 2300 Mission St',
+    desc: "This apartment was selected because it matches the user's core objective preferences: it is within budget, located in the preferred area, and meets the required bedroom count. It also includes high-priority amenities such as in-unit laundry and parking, making it a strong overall fit.",
+    pass: false,
+  },
+  {
+    id: 3, time: '09:00', apt: 'lst-002 · 2300 Mission St',
+    desc: "This apartment was selected because it matches the user's core objective preferences: it is within budget, located in the preferred area, and meets the required bedroom count. It also includes high-priority amenities such as in-unit laundry and parking, making it a strong overall fit.",
+    pass: true,
+  },
+  {
+    id: 4, time: '09:00', apt: 'lst-002 · 2300 Mission St',
+    desc: "This apartment was selected because it matches the user's core objective preferences: it is within budget, located in the preferred area, and meets the required bedroom count. It also includes high-priority amenities such as in-unit laundry and parking, making it a strong overall fit.",
+    pass: true,
+  },
+]
+
+const NEG_LOGS = [
+  {
+    id: 1, time: '09:00', apt: 'lst-002 · 2300 Mission St',
+    thinking: "The listing price is slightly above similar apartments in the area, and the user prioritizes saving money. Since the apartment meets most other requirements, it is reasonable to request a small price adjustment while showing strong interest.",
+    message: "Hi, I'm reaching out regarding this apartment. I'm very interested and would love to learn more about the lease terms and availability.",
+  },
+  {
+    id: 2, time: '09:00', apt: 'lst-002 · 2300 Mission St',
+    thinking: "The listing price is slightly above similar apartments in the area, and the user prioritizes saving money. Since the apartment meets most other requirements, it is reasonable to request a small price adjustment while showing strong interest.",
+    message: "Hi, I'm reaching out regarding this apartment. I'm very interested and would love to learn more about the lease terms and availability.",
+  },
+]
+
+const PREF_BUBBLES = [
+  { label: 'cozy',     color: 'bg-teal-400',   w: 76,  h: 76  },
+  { label: 'quiet',    color: 'bg-indigo-400',  w: 95,  h: 95  },
+  { label: 'relaxing', color: 'bg-indigo-500',  w: 115, h: 115 },
+  { label: 'Warm',     color: 'bg-blue-400',    w: 72,  h: 72  },
+  { label: 'peaceful', color: 'bg-indigo-300',  w: 88,  h: 88  },
+  { label: 'homey',    color: 'bg-indigo-700',  w: 102, h: 102 },
+]
+
+
+/* ─────────────────────────────────────────
+   Timeline
+───────────────────────────────────────── */
+function Timeline({ active, onSelect }: { active: StageId; onSelect: (s: StageId) => void }) {
+  return (
+    <div className="relative flex items-start justify-between px-24 pt-5 pb-1 shrink-0">
+      {/* connecting line — vertically centered in the 44px dot area */}
+      <div className="absolute left-24 right-24 h-px bg-white/40" style={{ top: 'calc(20px + 22px)' }} />
+
+      {STAGES.map((stage) => {
+        const isActive = stage.id === active
+        return (
+          <button
+            key={stage.id}
+            onClick={() => onSelect(stage.id)}
+            className="relative z-10 flex flex-col items-center gap-2"
+          >
+            {/* dot */}
+            <div className="h-11 flex items-center justify-center">
+              {isActive ? (
+                <div className="w-11 h-11 rounded-full bg-[#5B4FEA] flex items-center justify-center shadow-lg shadow-indigo-500/40">
+                  <div className="w-3 h-3 rounded-full bg-white" />
+                </div>
+              ) : (
+                <div className="w-3 h-3 rounded-full bg-white/50" />
+              )}
+            </div>
+            {/* label */}
+            <span className={cn(
+              'text-sm whitespace-nowrap',
+              isActive ? 'text-white font-bold' : 'text-white/50'
+            )}>
+              {stage.label}
+            </span>
+          </button>
+        )
+      })}
+    </div>
+  )
 }
 
 /* ─────────────────────────────────────────
-   Pipeline connector bar — interactive tabs
+   Shared: log panel wrapper
 ───────────────────────────────────────── */
-function PipelineBar({
-  currentPhase, selected, onSelect,
-}: {
-  currentPhase: string
-  selected: StageId | null
-  onSelect: (id: StageId) => void
-}) {
-  const runningIdx = STAGES.findIndex(s => currentPhase.startsWith(s.id.slice(0, 4)))
-  const effectiveRunning = runningIdx === -1 ? 1 : runningIdx
+function LogPanel({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-2xl flex flex-col overflow-hidden min-h-0">
+      {/* header */}
+      <div className="flex items-center gap-3 px-6 py-5 shrink-0 border-b border-white/10">
+        <div className="w-5 h-8 bg-blue-500 rounded-sm shrink-0" />
+        <h2 className="text-white font-bold text-xl">{title}</h2>
+      </div>
+      {/* entries */}
+      <div className="flex-1 overflow-y-auto divide-y divide-white/10">
+        {children}
+      </div>
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────
+   Shared: left sidebar card
+───────────────────────────────────────── */
+function SideCard({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="w-72 shrink-0 bg-white/30 backdrop-blur-sm rounded-2xl overflow-hidden flex flex-col">
+      {children}
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────
+   Shared: status icon (emoji-style)
+───────────────────────────────────────── */
+function StatusIcon({ status }: { status: 'success' | 'error' | 'working' }) {
+  const src = status === 'success' ? successIcon : status === 'error' ? errorIcon : workingIcon
+  return <img src={src} alt={status} className="w-7 h-7 shrink-0" />
+}
+
+/* ─────────────────────────────────────────
+   1. Searching stage
+───────────────────────────────────────── */
+function SearchView() {
+  return (
+    <div className="flex gap-4 h-full">
+      {/* Left: two stacked cards */}
+      <div className="w-72 shrink-0 flex flex-col gap-4">
+        {/* Card 1 — stat */}
+        <div className="bg-white/30 backdrop-blur-sm rounded-2xl p-6">
+          <div className="text-8xl font-bold text-white leading-none tracking-tight">2801</div>
+          <div className="text-white text-base font-medium mt-3">Apartments Found</div>
+        </div>
+
+        {/* Card 2 — sources */}
+        <div className="flex-1 bg-white/30 backdrop-blur-sm rounded-2xl p-6 flex flex-col">
+          <div className="text-white font-bold text-xl mb-4 text-center">Sources</div>
+          <div className="flex-1 flex items-center justify-center">
+            <img src={logosImg} alt="Sources" className="w-4/5 object-contain" />
+          </div>
+        </div>
+      </div>
+
+      <LogPanel title="Image Analysis Agent Log">
+        {IMAGE_LOGS.map(log => (
+          <div key={log.id} className="px-6 py-4 flex items-start gap-3">
+            <span className="text-xs text-white/40 font-mono shrink-0 mt-1">{log.time}</span>
+            <StatusIcon status={log.pass ? 'success' : 'error'} />
+            <div className="flex-1 min-w-0">
+              <p className="text-white/80 text-sm leading-relaxed">
+                <span className="text-white font-medium">{log.apt}: </span>
+                {log.desc}
+              </p>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {log.tags.map(t => (
+                  <span key={t} className="text-sm px-4 py-1 rounded-full bg-white/15 text-indigo-200 font-medium">
+                    {t}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </LogPanel>
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────
+   2. Filtering stage
+───────────────────────────────────────── */
+function FilterView() {
+  return (
+    <div className="flex gap-4 h-full">
+      <SideCard>
+        <div className="p-6 flex flex-col h-full gap-5">
+          <p className="text-white font-bold text-lg leading-snug">
+            We are taking your subjective preferences in to consideration
+          </p>
+
+          {/* Bubble cloud */}
+          <div className="flex-1 relative">
+            <div
+              className="absolute inset-0 flex flex-wrap content-center justify-center gap-2"
+              style={{ alignContent: 'center' }}
+            >
+              {PREF_BUBBLES.map(b => (
+                <div
+                  key={b.label}
+                  className={cn('rounded-full flex items-center justify-center text-white font-medium shrink-0', b.color)}
+                  style={{ width: b.w, height: b.h, fontSize: b.w > 90 ? 14 : 12 }}
+                >
+                  {b.label}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </SideCard>
+
+      <LogPanel title="Filtering Agent Log">
+        {FILTER_LOGS.map(log => (
+          <div key={log.id} className="px-6 py-4 flex items-start gap-3">
+            <span className="text-3xl shrink-0 leading-none select-none">{log.pass ? '😊' : '😟'}</span>
+            <span className="text-xs text-white/40 font-mono shrink-0 mt-1">{log.time}</span>
+            <p className="text-white/80 text-sm leading-relaxed flex-1 min-w-0">
+              <span className="text-white font-medium">{log.apt}: </span>
+              {log.desc}
+            </p>
+          </div>
+        ))}
+      </LogPanel>
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────
+   3. Negotiation stage
+───────────────────────────────────────── */
+function NegotiateAptCard({ listing, onClick }: { listing: Listing; onClick: () => void }) {
+  const bedNum = listing.bedrooms.replace(/\D/g, '')
+  return (
+    <button
+      className="w-full flex rounded-2xl overflow-hidden bg-white shadow-sm text-left hover:shadow-md transition-shadow"
+      onClick={onClick}
+    >
+      {/* Photo */}
+      <img
+        src={listing.images[0]}
+        alt={listing.title}
+        className="w-32 shrink-0 object-cover"
+        onError={e => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${listing.id}/200/200` }}
+      />
+      {/* Info */}
+      <div className="flex-1 min-w-0 p-4 flex flex-col justify-between">
+        <div>
+          <div className="text-gray-900 font-bold text-base leading-tight">{listing.title}</div>
+          <div className="text-gray-400 text-xs mt-1">{listing.address}</div>
+          <div className="text-[#6A5CFF] font-bold text-xl mt-2">{formatCurrency(listing.price)}</div>
+        </div>
+        <div className="flex items-center gap-2 text-gray-400 text-xs mt-3">
+          <BedDouble size={13} className="shrink-0" />
+          <span>{bedNum} beds</span>
+          <span className="text-gray-200">|</span>
+          <Bath size={13} className="shrink-0" />
+          <span>{listing.bathrooms} baths</span>
+          <span className="text-gray-200">|</span>
+          <Maximize2 size={13} className="shrink-0" />
+          <span>{listing.sqft} ft²</span>
+        </div>
+      </div>
+    </button>
+  )
+}
+
+function NegotiateView({ listings }: { listings: Listing[] }) {
+  const { setSelectedListing, setTopTab } = useStore()
+  const inProgress = listings.filter(l =>
+    l.negotiationStatus === 'negotiating' || l.negotiationStatus === 'pending'
+  )
+  const displayList = inProgress.length > 0 ? inProgress : listings.slice(0, 4)
+
+  function handleAptClick(id: string) {
+    setSelectedListing(id)
+    setTopTab('match')
+  }
 
   return (
-    <div className="shrink-0 flex items-center justify-center gap-0 px-6 py-2 bg-white dark:bg-[#0F0F0F] border-b border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)]">
-      {STAGES.map((stage, i) => {
-        const Icon = stage.icon
-        const isRunning = i === effectiveRunning
-        const isDone = i < effectiveRunning
-        const isSelected = selected === stage.id
-        return (
-          <div key={stage.id} className="flex items-center">
-            <button
-              onClick={() => onSelect(stage.id)}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all duration-150',
-                isSelected
-                  ? PALETTE[stage.color].pill + ' shadow-md scale-105'
-                  : isRunning
-                  ? PALETTE[stage.color].pill + ' opacity-70'
-                  : isDone
-                  ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:opacity-80'
-                  : 'bg-[#F0F0F1] dark:bg-[#1A1A1A] text-[#6B6B6B] hover:bg-[#E2E2E3] dark:hover:bg-[#242424]'
-              )}
-            >
-              {isDone && !isSelected
-                ? <CheckCircle2 size={11} />
-                : <Icon size={11} className={isRunning && !isSelected ? 'opacity-70' : ''} />
-              }
-              {stage.label}
-              {isRunning && !isSelected && <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60 animate-pulse" />}
-            </button>
-            {i < STAGES.length - 1 && (
-              <ArrowRight size={12} className="mx-1 text-[#9A9A9A] dark:text-slate-600" />
-            )}
+    <div className="flex gap-4 h-full">
+      <div className="w-[420px] shrink-0 bg-white/30 backdrop-blur-sm rounded-2xl p-5 flex flex-col gap-4 overflow-hidden">
+        <div className="flex items-center justify-center gap-4 py-2">
+          <span className="text-8xl font-bold text-white leading-none">{inProgress.length || 4}</span>
+          <span className="text-white text-2xl font-semibold">In Progress</span>
+        </div>
+        <div className="flex-1 overflow-y-auto space-y-3">
+          {displayList.map(l => (
+            <NegotiateAptCard key={l.id} listing={l} onClick={() => handleAptClick(l.id)} />
+          ))}
+        </div>
+      </div>
+
+      <LogPanel title="Negotiation Agent Log">
+        {NEG_LOGS.map(log => (
+          <div key={log.id} className="px-6 py-5 space-y-3">
+            <p className="text-xs text-white/50 font-mono">{log.time}</p>
+            <p className="text-white/70 text-sm leading-relaxed">
+              <span className="font-medium text-white">{log.apt}: </span>
+              {log.thinking}
+            </p>
+            {/* message bubble */}
+            <div className="rounded-2xl rounded-tl-sm px-4 py-3" style={{ backgroundColor: '#A0BCE8' }}>
+              <p className="text-black text-sm leading-relaxed">{log.message}</p>
+            </div>
           </div>
-        )
-      })}
+        ))}
+      </LogPanel>
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────
+   4. Notification stage
+───────────────────────────────────────── */
+function NotifyView({ notifications }: { notifications: Notification[] }) {
+  const t = (ts: string) => new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+
+  return (
+    <div className="flex flex-col gap-4 h-full">
+      {/* top bar */}
+      <div className="bg-white/30 backdrop-blur-sm rounded-2xl px-8 py-5 flex items-center justify-between shrink-0">
+        <div className="flex items-center gap-4">
+          <span className="text-8xl font-bold text-white leading-none">3</span>
+          <span className="text-white/80 text-lg font-medium">Appointment Arranged</span>
+        </div>
+        <button className="flex items-center gap-3 px-5 py-3 rounded-xl bg-[#5B4FEA] text-white font-semibold text-sm hover:bg-[#4A3FD9] transition-colors">
+          <img src={googleCalendarImg} alt="Google Calendar" className="w-8 h-8 shrink-0" />
+          <span className="leading-tight">Go Check<br />Google Calendar</span>
+        </button>
+      </div>
+
+      {/* notification log */}
+      <div className="flex-1 bg-white/10 backdrop-blur-sm rounded-2xl flex flex-col overflow-hidden min-h-0">
+        <div className="flex items-center gap-3 px-6 py-5 shrink-0 border-b border-white/10">
+          <div className="w-5 h-8 bg-blue-500 rounded-sm shrink-0" />
+          <h2 className="text-white font-bold text-xl">Notification Log</h2>
+        </div>
+        <div className="flex-1 overflow-y-auto divide-y divide-white/10">
+          {notifications.map(n => (
+            <div key={n.id} className="px-6 py-4 flex items-start gap-4">
+              <img src={bellIcon} alt="bell" className="w-6 h-6 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-white/40 font-mono shrink-0">{t(n.timestamp)}</span>
+                  <span className="text-white font-semibold text-sm">{n.title}</span>
+                </div>
+                <p className="text-white/60 text-sm mt-0.5">{n.message}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
@@ -547,115 +403,19 @@ function PipelineBar({
    Main AgentLog
 ───────────────────────────────────────── */
 export function AgentLog() {
-  const { agentStatus, toggleAgent, preferences, updateNegotiation } = useStore()
-  const [showConfig, setShowConfig] = useState(false)
-  const [selectedStage, setSelectedStage] = useState<StageId | null>(null)
-
-  function handleSelectStage(id: StageId) {
-    setSelectedStage(prev => prev === id ? null : id)
-  }
-
-  // Column visibility: all visible, but selected one is highlighted, others dimmed
-  function colClass(id: StageId) {
-    if (!selectedStage) return 'transition-all duration-200'
-    const color = STAGES.find(s => s.id === id)!.color
-    return selectedStage === id
-      ? cn('transition-all duration-200 shadow-lg', PALETTE[color].ring, PALETTE[color].glow)
-      : 'transition-all duration-200 opacity-40'
-  }
+  const { listings, notifications } = useStore()
+  const [activeStage, setActiveStage] = useState<StageId>('filter')
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
+      <Timeline active={activeStage} onSelect={setActiveStage} />
 
-      {/* ── Agent control bar ── */}
-      <div className="shrink-0 flex items-center gap-3 px-4 py-2 bg-white dark:bg-[#0F0F0F] border-b border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)]">
-        <div className={cn(
-          'flex items-center gap-2 flex-1 px-3 py-1.5 rounded-xl border text-xs font-medium',
-          agentStatus.isRunning
-            ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
-            : 'bg-[#F0F0F1] dark:bg-[#1A1A1A] border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] text-[#6B6B6B]'
-        )}>
-          <span className={cn('w-2 h-2 rounded-full shrink-0', agentStatus.isRunning ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400')} />
-          <Bot size={12} />
-          <span className={agentStatus.isRunning ? '' : 'text-[#6B6B6B]'}>
-            {agentStatus.isRunning ? 'Running' : 'Paused'}
-          </span>
-          <span className="ml-auto flex items-center gap-3 text-[10px] opacity-70">
-            <span>{agentStatus.matchesFound} matches found</span>
-            <span>{agentStatus.negotiationsActive} negotiating</span>
-            <span>{agentStatus.toursScheduled} tour{agentStatus.toursScheduled !== 1 ? 's' : ''} scheduled</span>
-          </span>
-        </div>
-        <Button
-          variant={agentStatus.isRunning ? 'outline' : 'default'}
-          size="sm"
-          onClick={toggleAgent}
-          className="gap-1.5 shrink-0 h-8 text-xs"
-        >
-          {agentStatus.isRunning ? <><Pause size={12} />Pause</> : <><Play size={12} />Resume</>}
-        </Button>
+      <div className="flex-1 overflow-hidden px-6 pb-6 pt-4 min-h-0">
+        {activeStage === 'search'    && <SearchView />}
+        {activeStage === 'filter'    && <FilterView />}
+        {activeStage === 'negotiate' && <NegotiateView listings={listings} />}
+        {activeStage === 'notify'    && <NotifyView notifications={notifications} />}
       </div>
-
-      {/* ── Pipeline bar — clickable tabs ── */}
-      <PipelineBar
-        currentPhase={agentStatus.phase}
-        selected={selectedStage}
-        onSelect={handleSelectStage}
-      />
-
-      {/* ── 4-column pipeline (main content) ── */}
-      <div className="flex-1 overflow-hidden grid grid-cols-4 divide-x divide-[rgba(1,2,5,0.08)] dark:divide-[rgba(255,215,0,0.08)]">
-        <div className={cn('h-full overflow-hidden', colClass('search'))}><SearchStage /></div>
-        <div className={cn('h-full overflow-hidden', colClass('filter'))}><FilteringStage /></div>
-        <div className={cn('h-full overflow-hidden', colClass('negotiate'))}><NegotiationStage /></div>
-        <div className={cn('h-full overflow-hidden', colClass('notify'))}><NotificationStage /></div>
-      </div>
-
-      {/* ── Agent config (collapsible footer) ── */}
-      <div className="shrink-0 bg-white dark:bg-[#0F0F0F] border-t border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)]">
-        <button
-          onClick={() => setShowConfig(v => !v)}
-          className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-[#F0F0F1] dark:hover:bg-[#1A1A1A] transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <Settings size={13} className="text-[#6B6B6B]" />
-            <span className="text-xs font-semibold text-[#1A1A1F] dark:text-yellow-400/70">Agent Configuration</span>
-          </div>
-          <ChevronDown size={13} className={cn('text-[#6B6B6B] transition-transform', showConfig && 'rotate-180')} />
-        </button>
-
-        {showConfig && (
-          <div className="px-4 pb-4 grid grid-cols-2 gap-4 border-t border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] pt-4">
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs text-[#4A4A4A] dark:text-yellow-400/60">Max follow-ups per landlord</label>
-                <span className="text-xs font-semibold text-indigo-600 dark:text-yellow-400">{preferences.negotiation.maxFollowUps}</span>
-              </div>
-              <Slider
-                min={1} max={10} step={1}
-                value={[preferences.negotiation.maxFollowUps]}
-                onValueChange={([v]) => updateNegotiation({ maxFollowUps: v })}
-              />
-            </div>
-            <div className="space-y-2">
-              {([
-                { key: 'canScheduleTours' as const, label: 'Auto-schedule tours' },
-                { key: 'canSubmitApplications' as const, label: 'Auto-submit applications' },
-                { key: 'canConfirmLeaseTerms' as const, label: 'Auto-confirm lease terms' },
-              ]).map(({ key, label }) => (
-                <div key={key} className="flex items-center justify-between">
-                  <span className="text-xs text-[#4A4A4A] dark:text-yellow-400/60">{label}</span>
-                  <Switch
-                    checked={preferences.negotiation[key]}
-                    onCheckedChange={v => updateNegotiation({ [key]: v })}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
     </div>
   )
 }

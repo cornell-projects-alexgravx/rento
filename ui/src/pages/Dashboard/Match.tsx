@@ -1,40 +1,43 @@
-import { useState, useRef, useEffect } from 'react'
-import GridLayout from 'react-grid-layout'
-import type { Layout, LayoutItem } from 'react-grid-layout'
+import { useState, useEffect } from 'react'
+import { useMap } from 'react-leaflet'
+import { GridLayout, verticalCompactor, useContainerWidth } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
+import 'react-resizable/css/styles.css'
 import {
-  MapPin, Clock, Star, Plus, Calendar, Bookmark,
-  ChevronLeft, ChevronRight, TrendingDown, Shield,
-  Coffee, ShoppingBag, TreePine, Train,
-  Sparkles, CheckCircle2, MessageSquare,
-  PanelLeftClose, PanelLeftOpen, X, LayoutGrid,
-  Send, Bot, User, AlertCircle, ArrowUpDown,
+  BedDouble, Bath, Maximize2,
+  ListFilter, MessageSquare, Plus,
+  Sparkles, MapPin, GripVertical, X,
+  ChevronLeft, ChevronRight, LayoutGrid,
 } from 'lucide-react'
+import likeIcon from '../../assets/image/like.svg'
+import dislikeIcon from '../../assets/image/dislike.svg'
+import laundryIcon from '../../assets/image/landry.svg'
+import parkingIcon from '../../assets/image/parking.svg'
+import petIcon from '../../assets/image/pet.svg'
+import { MapContainer, TileLayer, Marker } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
+import markerIcon from 'leaflet/dist/images/marker-icon.png'
+import markerShadow from 'leaflet/dist/images/marker-shadow.png'
+
+// Fix default Leaflet marker icons broken by bundlers
+delete (L.Icon.Default.prototype as any)._getIconUrl
+L.Icon.Default.mergeOptions({ iconUrl: markerIcon, iconRetinaUrl: markerIcon2x, shadowUrl: markerShadow })
 import { useStore } from '../../store/useStore'
 import type { Listing } from '../../types'
-import { Badge } from '../../components/ui/badge'
-import { Button } from '../../components/ui/button'
 import { cn, formatCurrency } from '../../lib/utils'
 
 /* ─────────────────────────────────────────
    Types
 ───────────────────────────────────────── */
 type NegStatusFilter = 'all' | 'not-started' | 'in-progress' | 'completed'
-type ModuleKey = 'info' | 'rationale' | 'map' | 'neighborhood' | 'negotiation'
-
-const MODULE_DEFS: { key: ModuleKey; label: string; emoji: string }[] = [
-  { key: 'info',         label: 'Detail Info',         emoji: '📋' },
-  { key: 'rationale',   label: 'AI Rationale',         emoji: '✨' },
-  { key: 'map',         label: 'Map',                  emoji: '🗺️' },
-  { key: 'neighborhood', label: 'Neighborhood',         emoji: '🏘️' },
-  { key: 'negotiation', label: 'Negotiation History',  emoji: '💬' },
-]
 
 const STATUS_FILTERS: { key: NegStatusFilter; label: string }[] = [
-  { key: 'all',          label: 'All' },
-  { key: 'not-started',  label: 'Not Started' },
-  { key: 'in-progress',  label: 'In Progress' },
-  { key: 'completed',    label: 'Completed' },
+  { key: 'all',         label: 'All' },
+  { key: 'not-started', label: 'Not Started' },
+  { key: 'in-progress', label: 'In Progress' },
+  { key: 'completed',   label: 'Done' },
 ]
 
 function negStatusOf(l: Listing): NegStatusFilter {
@@ -44,190 +47,33 @@ function negStatusOf(l: Listing): NegStatusFilter {
 }
 
 /* ─────────────────────────────────────────
-   Listing list card (slim)
+   Mock negotiation messages
 ───────────────────────────────────────── */
-function ListCard({ listing, selected, onClick }: {
-  listing: Listing; selected: boolean; onClick: () => void
-}) {
-  const statusColor = negStatusOf(listing) === 'completed'
-    ? 'bg-emerald-500'
-    : negStatusOf(listing) === 'in-progress'
-    ? 'bg-amber-500'
-    : 'bg-zinc-600'
-
-  return (
-    <div
-      onClick={onClick}
-      className={cn(
-        'flex gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-150 hover:shadow-sm',
-        selected
-          ? 'border-indigo-400 bg-indigo-50/60 dark:bg-yellow-400/10 shadow-sm'
-          : 'border-[rgba(1,2,5,0.10)] bg-white hover:border-[rgba(1,2,5,0.25)] dark:hover:border-[rgba(255,215,0,0.30)]'
-      )}
-    >
-      {/* Thumbnail */}
-      <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-[#E2E2E3]">
-        <img
-          src={listing.images[0]}
-          alt={listing.title}
-          className="w-full h-full object-cover"
-          onError={e => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${listing.id}/100/100` }}
-        />
-        <div className={cn('absolute top-1 right-1 w-2 h-2 rounded-full', statusColor)} />
-      </div>
-
-      {/* Text */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-1">
-          <p className="text-xs font-semibold text-[#010205] dark:text-white leading-tight line-clamp-1">
-            {listing.title}
-          </p>
-          <span
-            className={cn(
-              'shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full',
-              listing.matchType === 'perfect'
-                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300'
-                : 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'
-            )}
-          >
-            {listing.matchScore}%
-          </span>
-        </div>
-        <p className="text-[11px] text-indigo-600 dark:text-yellow-400 font-semibold mt-0.5">
-          {formatCurrency(listing.price)}<span className="text-[#6B6B6B] font-normal">/mo</span>
-        </p>
-        <p className="text-[11px] text-[#6B6B6B] mt-0.5 flex items-center gap-1 line-clamp-1">
-          <MapPin size={9} />{listing.neighborhood}
-        </p>
-        <div className="flex items-center gap-2 mt-1 text-[10px] text-[#6B6B6B]">
-          <span>{listing.bedrooms}</span>
-          <span>·</span>
-          <span className="flex items-center gap-0.5"><Clock size={9} />{listing.commuteTime}m</span>
-          {listing.originalPrice && listing.originalPrice > listing.price && (
-            <><span>·</span><span className="text-amber-500 flex items-center gap-0.5"><TrendingDown size={9} />drop</span></>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* ─────────────────────────────────────────
-   Map — 2-color markers
-   🔴 red  = currently viewing (selected detail)
-   🔵 blue = all listings in the filtered sidebar list
-───────────────────────────────────────── */
-const PIN_POSITIONS = [
-  { top: '35%', left: '44%' }, { top: '56%', left: '31%' },
-  { top: '41%', left: '27%' }, { top: '22%', left: '38%' },
-  { top: '47%', left: '29%' }, { top: '61%', left: '54%' },
-  { top: '69%', left: '34%' },
-]
-
-function MapView({ listings, selectedId, onSelect, height = 'h-56' }: {
-  listings: Listing[]
-  selectedId: string | null
-  onSelect: (id: string) => void
-  height?: string
-}) {
-  return (
-    <div className={cn('relative w-full rounded-xl overflow-hidden border border-[rgba(1,2,5,0.10)] bg-gradient-to-br from-[#F0F0F1] to-[#E2E2E3]', height)}>
-      {/* Grid lines */}
-      <svg className="absolute inset-0 w-full h-full opacity-10">
-        <defs><pattern id="mg" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1"/></pattern></defs>
-        <rect width="100%" height="100%" fill="url(#mg)"/>
-      </svg>
-      {/* Roads */}
-      <svg className="absolute inset-0 w-full h-full opacity-20 dark:opacity-30">
-        <line x1="0" y1="40%" x2="100%" y2="40%" stroke="#94a3b8" strokeWidth="3"/>
-        <line x1="0" y1="65%" x2="100%" y2="65%" stroke="#94a3b8" strokeWidth="2"/>
-        <line x1="30%" y1="0" x2="30%" y2="100%" stroke="#94a3b8" strokeWidth="2"/>
-        <line x1="65%" y1="0" x2="65%" y2="100%" stroke="#94a3b8" strokeWidth="3"/>
-        <line x1="15%" y1="20%" x2="80%" y2="80%" stroke="#94a3b8" strokeWidth="1.5"/>
-      </svg>
-
-      {/* Location label */}
-      <div className="absolute top-2 left-2 bg-white/90 rounded-lg px-2 py-1 text-[11px] font-medium text-[#4A4A4A] dark:text-yellow-400/60 shadow border border-[rgba(1,2,5,0.10)] z-20">
-        San Francisco, CA
-      </div>
-
-      {/* Pins */}
-      {listings.map((l, i) => {
-        const pos = PIN_POSITIONS[i % PIN_POSITIONS.length]
-        const isSel = l.id === selectedId
-        return (
-          <button
-            key={l.id}
-            onClick={() => onSelect(l.id)}
-            style={{ top: pos.top, left: pos.left, zIndex: isSel ? 30 : 10 }}
-            className="absolute -translate-x-1/2 -translate-y-full group"
-          >
-            {/* Price bubble */}
-            <div className={cn(
-              'px-2 py-0.5 rounded-full text-[10px] font-bold shadow-lg border-2 transition-all duration-150',
-              isSel
-                ? 'bg-red-500 border-white ring-2 ring-red-300 scale-110'
-                : 'bg-blue-500 border-white hover:scale-105'
-            )}>
-              <span className="text-white drop-shadow-sm">{formatCurrency(l.price)}</span>
-            </div>
-            {/* Pin stem */}
-            <div className={cn('w-1.5 h-1.5 rounded-full mx-auto -mt-px', isSel ? 'bg-red-500' : 'bg-blue-500')} />
-
-            {/* Hover tooltip */}
-            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none w-36 bg-[#F0F0F1] text-[#010205] text-[10px] rounded-lg p-2 shadow-xl z-40">
-              <p className="font-semibold leading-tight">{l.title}</p>
-              <p className="text-[#9A9A9A] mt-0.5">{l.neighborhood}</p>
-              <div className="flex items-center gap-1 mt-1">
-                <span className={cn('w-1.5 h-1.5 rounded-full', isSel ? 'bg-red-400' : 'bg-blue-400')} />
-                <span className="text-[#9A9A9A]">{isSel ? 'Currently viewing' : 'In list'}</span>
-              </div>
-            </div>
-          </button>
-        )
-      })}
-
-      {/* Legend */}
-      <div className="absolute bottom-2 right-2 bg-white/95 rounded-lg p-2 shadow-md border border-[rgba(1,2,5,0.10)] space-y-1 z-20">
-        <div className="flex items-center gap-1.5 text-[10px] text-[#4A4A4A] dark:text-yellow-400/60">
-          <div className="w-2.5 h-2.5 rounded-full bg-red-500 ring-1 ring-red-300"/>
-          Viewing
-        </div>
-        <div className="flex items-center gap-1.5 text-[10px] text-[#4A4A4A] dark:text-yellow-400/60">
-          <div className="w-2.5 h-2.5 rounded-full bg-blue-500"/>
-          In list
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* ─────────────────────────────────────────
-   Negotiation history for a listing
-───────────────────────────────────────── */
-const mockMessages: Record<string, { sender: 'agent' | 'landlord' | 'user'; text: string; time: string }[]> = {
+const mockMessages: Record<string, { sender: 'agent' | 'landlord'; text: string; time: string }[]> = {
   'lst-002': [
-    { sender: 'agent', text: 'Hi Rosa, reaching out on behalf of a qualified tenant interested in your 1BR at 2300 Mission St. Would you be open to discussing terms?', time: '08:00' },
-    { sender: 'landlord', text: 'Hi! Unit available April 1st. Asking $2,400/mo, $4,800 deposit. Small pets fine with $500 deposit.', time: '09:00' },
-    { sender: 'agent', text: 'Thank you! Given a 12-month lease with renewal potential, would you consider $2,350/mo?', time: '09:02' },
-    { sender: 'landlord', text: "I can do $2,350 with one month deposit. I'll waive the pet deposit if they're responsible. When can they view?", time: '09:03' },
+    { sender: 'agent',    text: "Hi, I'm reaching out regarding this apartment. I'm very interested and would love to learn more about the lease terms and availability.", time: '08:00' },
+    { sender: 'landlord', text: "Hello, thanks for reaching out. The unit is still open, and we're scheduling tours this week.", time: '08:15' },
+    { sender: 'agent',    text: 'Could you let me know if utilities are included in the rent?', time: '08:17' },
+    { sender: 'landlord', text: 'Water and trash are included. Gas and electric are separate.', time: '08:30' },
   ],
   'lst-003': [
-    { sender: 'agent', text: 'Hello, reaching out about the studio at 501 Fell St. My client is very interested.', time: '07:30' },
-    { sender: 'landlord', text: 'Thanks for reaching out! We just dropped the price to $1,950. Is your client flexible on move-in?', time: '08:45' },
+    { sender: 'agent',    text: "Hello, reaching out about the studio at 501 Fell St. My client is very interested.", time: '07:30' },
+    { sender: 'landlord', text: "Thanks for reaching out! We just dropped the price to $1,950. Is your client flexible on move-in?", time: '08:45' },
   ],
 }
 
-function NegotiationHistory({ listingId }: { listingId: string }) {
-  const [reply, setReply] = useState('')
+/* ─────────────────────────────────────────
+   Negotiation chat
+───────────────────────────────────────── */
+function NegotiationChat({ listingId }: { listingId: string }) {
   const messages = mockMessages[listingId] || []
 
   if (messages.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center">
-        <MessageSquare size={28} className="text-[#9A9A9A] mb-2" />
-        <p className="text-sm text-[#6B6B6B] dark:text-yellow-400/60">No negotiation started yet</p>
-        <button className="mt-3 flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 transition-colors">
+        <MessageSquare size={28} className="text-white/30 mb-2" />
+        <p className="text-sm text-white/50">No negotiation started yet</p>
+        <button className="mt-3 flex items-center gap-1.5 px-4 py-2 bg-[#6A5CFF] text-white text-xs font-medium rounded-lg hover:bg-[#5a4def] transition-colors">
           <Plus size={13} /> Start negotiation
         </button>
       </div>
@@ -235,391 +81,380 @@ function NegotiationHistory({ listingId }: { listingId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* Pending approval banner */}
-      {listingId === 'lst-002' && (
-        <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-lg">
-          <AlertCircle size={14} className="text-amber-500 shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-amber-800 dark:text-amber-300">Your approval needed</p>
-            <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">Landlord accepted $2,350/mo with waived pet deposit.</p>
-          </div>
-          <div className="flex gap-1 shrink-0">
-            <button className="px-2 py-1 bg-emerald-500 text-white text-[10px] font-semibold rounded">Accept</button>
-            <button className="px-2 py-1 bg-[#E2E2E3] text-[#4A4A4A] text-[10px] font-semibold rounded">Decline</button>
+    <div className="space-y-3">
+      {messages.map((m, i) => (
+        <div key={i} className={cn('flex', m.sender === 'agent' ? 'justify-end' : 'justify-start')}>
+          <div className={cn(
+            'max-w-[70%] px-4 py-3 rounded-2xl text-sm leading-relaxed',
+            m.sender === 'agent'
+              ? 'bg-white text-gray-900 rounded-br-sm'
+              : 'bg-[#A0BCE8]/40 text-white rounded-bl-sm'
+          )}>
+            {m.text}
+            <div className="text-[10px] opacity-50 mt-1 text-right">{m.time}</div>
           </div>
         </div>
+      ))}
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────
+   Grid card (full view)
+───────────────────────────────────────── */
+function GridCard({ listing, selected, onClick }: {
+  listing: Listing; selected: boolean; onClick: () => void
+}) {
+  const bedNum = listing.bedrooms.replace(/\D/g, '')
+  return (
+    <div
+      onClick={onClick}
+      className={cn(
+        'bg-white rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-2xl hover:-translate-y-0.5',
+        selected && 'ring-2 ring-[#6A5CFF] shadow-lg shadow-[#6A5CFF]/20'
       )}
-
-      {/* Messages */}
-      <div className="space-y-2">
-        {messages.map((m, i) => (
-          <div key={i} className={cn('flex gap-2', m.sender === 'agent' || m.sender === 'user' ? 'flex-row' : 'flex-row-reverse')}>
-            <div className={cn('w-6 h-6 rounded-full flex items-center justify-center shrink-0 text-white text-[9px] font-bold',
-              m.sender === 'agent' ? 'bg-indigo-500' : m.sender === 'user' ? 'bg-slate-500' : 'bg-emerald-500')}>
-              {m.sender === 'agent' ? <Bot size={11} /> : m.sender === 'user' ? <User size={11} /> : 'L'}
-            </div>
-            <div className={cn('flex-1 max-w-[80%] px-3 py-2 rounded-xl text-xs leading-relaxed',
-              m.sender === 'landlord'
-                ? 'bg-[#E2E2E3] text-[#1A1A1F] dark:text-yellow-400/70 rounded-tr-sm'
-                : 'bg-indigo-50 dark:bg-yellow-400/10 text-indigo-900 dark:text-white rounded-tl-sm')}>
-              {m.text}
-              <div className="text-[9px] text-[#6B6B6B] mt-1">{m.time}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Reply box */}
-      <div className="flex gap-2 pt-1">
-        <input
-          value={reply}
-          onChange={e => setReply(e.target.value)}
-          placeholder="Send a message..."
-          className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-[rgba(1,2,5,0.10)] bg-white text-[#010205] dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+    >
+      <div className="relative h-44 overflow-hidden">
+        <img
+          src={listing.images[0]}
+          alt={listing.title}
+          className="w-full h-full object-cover"
+          onError={e => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${listing.id}/400/200` }}
         />
-        <button className="p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-          <Send size={13} />
-        </button>
+        <div className="absolute top-3 right-3 flex gap-2">
+          <button onClick={e => e.stopPropagation()} className="flex items-center justify-center">
+            <img src={likeIcon} alt="like" className="w-7 h-7 object-contain" />
+          </button>
+          <button onClick={e => e.stopPropagation()} className="flex items-center justify-center">
+            <img src={dislikeIcon} alt="dislike" className="w-7 h-7 object-contain" />
+          </button>
+        </div>
+      </div>
+      <div className="p-4">
+        <h3 className="font-bold text-gray-900 text-[15px] leading-tight">{listing.title}</h3>
+        <p className="text-gray-400 text-xs mt-1 leading-snug">{listing.address}</p>
+        <p className="text-[#6A5CFF] font-bold text-xl mt-2">{formatCurrency(listing.price)}</p>
+        <div className="border-t border-gray-100 mt-3 pt-3 flex items-center gap-1.5 text-[11px] text-gray-500">
+          <BedDouble size={12} className="text-gray-400 shrink-0" />
+          <span>{bedNum} beds</span>
+          <span className="text-gray-200 px-0.5">|</span>
+          <Bath size={12} className="text-gray-400 shrink-0" />
+          <span>{listing.bathrooms} baths</span>
+          <span className="text-gray-200 px-0.5">|</span>
+          <Maximize2 size={12} className="text-gray-400 shrink-0" />
+          <span>{listing.sqft} ft²</span>
+        </div>
       </div>
     </div>
   )
 }
 
 /* ─────────────────────────────────────────
-   Modular detail dashboard — react-grid-layout
+   Narrow list card (detail view sidebar)
 ───────────────────────────────────────── */
-const DEFAULT_LAYOUT: LayoutItem[] = [
-  { i: 'info',         x: 0, y: 0,  w: 12, h: 18, minH: 12, minW: 4 },
-  { i: 'rationale',   x: 0, y: 18, w: 6,  h: 8,  minH: 5,  minW: 3 },
-  { i: 'map',         x: 6, y: 18, w: 6,  h: 11, minH: 6,  minW: 3 },
-  { i: 'neighborhood', x: 0, y: 29, w: 6,  h: 11, minH: 7,  minW: 3 },
-  { i: 'negotiation', x: 6, y: 29, w: 6,  h: 11, minH: 6,  minW: 3 },
+function ListCard({ listing, selected, onClick }: {
+  listing: Listing; selected: boolean; onClick: () => void
+}) {
+  const bedNum = listing.bedrooms.replace(/\D/g, '')
+  return (
+    <div
+      onClick={onClick}
+      className={cn(
+        'bg-white rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg shrink-0',
+        selected && 'ring-2 ring-[#6A5CFF]'
+      )}
+    >
+      <div className="relative h-32 overflow-hidden">
+        <img
+          src={listing.images[0]}
+          alt={listing.title}
+          className="w-full h-full object-cover"
+          onError={e => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${listing.id}/300/200` }}
+        />
+        <div className="absolute top-2 right-2 flex gap-1.5">
+          <button onClick={e => e.stopPropagation()}>
+            <img src={likeIcon} alt="like" className="w-5 h-5 object-contain" />
+          </button>
+          <button onClick={e => e.stopPropagation()}>
+            <img src={dislikeIcon} alt="dislike" className="w-5 h-5 object-contain" />
+          </button>
+        </div>
+      </div>
+      <div className="p-3">
+        <h3 className="font-bold text-gray-900 text-sm leading-tight">{listing.title}</h3>
+        <p className="text-gray-400 text-[11px] mt-0.5">{listing.address}</p>
+        <p className="text-[#6A5CFF] font-bold text-base mt-1">{formatCurrency(listing.price)}</p>
+        <div className="border-t border-gray-100 mt-2 pt-2 flex items-center gap-1 text-[10px] text-gray-400">
+          <BedDouble size={10} className="shrink-0" /><span>{bedNum} beds</span>
+          <span className="text-gray-200 px-0.5">|</span>
+          <Bath size={10} className="shrink-0" /><span>{listing.bathrooms} baths</span>
+          <span className="text-gray-200 px-0.5">|</span>
+          <Maximize2 size={10} className="shrink-0" /><span>{listing.sqft} ft²</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ─────────────────────────────────────────
+   Grid layout card helpers
+───────────────────────────────────────── */
+type CardId = 'image' | 'rationale' | 'map' | 'neighborhood' | 'negotiation'
+
+interface LayoutItem { i: string; x: number; y: number; w: number; h: number; minW?: number; minH?: number }
+
+const ALL_CARD_DEFS: { id: CardId; label: string }[] = [
+  { id: 'image',        label: 'Image & Info' },
+  { id: 'rationale',   label: 'Rationale' },
+  { id: 'map',         label: 'Map' },
+  { id: 'neighborhood', label: 'Neighborhood' },
+  { id: 'negotiation', label: 'Negotiation' },
 ]
 
-function DetailDashboard({ listing, filteredListings }: { listing: Listing; filteredListings: Listing[] }) {
-  const { dashboardModules, addDashboardModule, removeDashboardModule, setSelectedListing } = useStore()
-  const { addToNegotiation, negotiationCart } = useStore()
-  const [imageIdx, setImageIdx] = useState(0)
-  const [addMenuOpen, setAddMenuOpen] = useState(false)
-  const inCart = negotiationCart.includes(listing.id)
+const DEFAULT_LAYOUT: LayoutItem[] = [
+  { i: 'image',        x: 0, y: 0,  w: 6, h: 10, minW: 3, minH: 5 },
+  { i: 'rationale',   x: 6, y: 0,  w: 6, h: 5,  minW: 3, minH: 3 },
+  { i: 'map',         x: 6, y: 5,  w: 6, h: 5,  minW: 3, minH: 3 },
+  { i: 'neighborhood', x: 0, y: 10, w: 12, h: 3, minW: 4, minH: 2 },
+  { i: 'negotiation', x: 0, y: 13, w: 12, h: 5, minW: 4, minH: 3 },
+]
 
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [containerWidth, setContainerWidth] = useState(800)
+function MapInvalidator() {
+  const map = useMap()
+  useEffect(() => {
+    const ro = new ResizeObserver(() => map.invalidateSize())
+    const el = map.getContainer().parentElement
+    if (el) ro.observe(el)
+    return () => ro.disconnect()
+  }, [map])
+  return null
+}
+
+/* ─────────────────────────────────────────
+   Apartment detail view
+───────────────────────────────────────── */
+function AptDetail({ listing }: { listing: Listing }) {
+  const { preferences } = useStore()
+  const [mapCenter, setMapCenter] = useState<[number, number]>([listing.lat, listing.lng])
+  const [layout, setLayout] = useState<LayoutItem[]>(DEFAULT_LAYOUT)
+  const [activeCards, setActiveCards] = useState<CardId[]>(['image', 'rationale', 'map', 'neighborhood', 'negotiation'])
+  const [showAddMenu, setShowAddMenu] = useState(false)
+  const { containerRef, width } = useContainerWidth({ initialWidth: 800 })
 
   useEffect(() => {
-    if (!containerRef.current) return
-    const ro = new ResizeObserver(entries => {
-      setContainerWidth(entries[0].contentRect.width)
-    })
-    ro.observe(containerRef.current)
-    return () => ro.disconnect()
-  }, [])
+    const loc = preferences.housing.location
+    if (!loc) return
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(loc)}&limit=1`)
+      .then(r => r.json())
+      .then(data => { if (data[0]) setMapCenter([parseFloat(data[0].lat), parseFloat(data[0].lon)]) })
+      .catch(() => {})
+  }, [preferences.housing.location])
 
-  const [layout, setLayout] = useState<LayoutItem[]>(DEFAULT_LAYOUT)
+  const moveInDate = new Date(listing.availableFrom).toLocaleDateString('en-US', {
+    month: 'numeric', day: 'numeric', year: 'numeric',
+  })
 
-  const poiIcons: Record<string, React.ElementType> = {
-    transit: Train, grocery: ShoppingBag, park: TreePine,
-    restaurant: Coffee, food: Coffee, culture: Star,
-    shopping: ShoppingBag, landmark: Star, market: ShoppingBag,
+  const amenities = [
+    { label: 'on_site',       icon: laundryIcon },
+    { label: 'garage',        icon: parkingIcon },
+    { label: 'pets friendly', icon: petIcon },
+  ]
+
+  function removeCard(id: CardId) {
+    setActiveCards(prev => prev.filter(c => c !== id))
+    setLayout(prev => prev.filter(l => l.i !== id))
   }
 
-  const visibleModules = MODULE_DEFS.filter(m => dashboardModules.includes(m.key))
-  const hiddenModules = MODULE_DEFS.filter(m => !dashboardModules.includes(m.key))
-  const visibleLayout: LayoutItem[] = layout.filter(l => dashboardModules.includes(l.i as ModuleKey))
+  function addCard(id: CardId) {
+    const def = DEFAULT_LAYOUT.find(l => l.i === id)!
+    setLayout(prev => [...prev, { ...def, y: Infinity }])
+    setActiveCards(prev => [...prev, id])
+    setShowAddMenu(false)
+  }
+
+  const hiddenCards = ALL_CARD_DEFS.filter(c => !activeCards.includes(c.id))
+
+  /* card header shared by every card */
+  function CardHeader({ id, label, icon }: { id: CardId; label: string; icon: React.ReactNode }) {
+    return (
+      <div className="drag-handle flex items-center justify-between px-4 py-2.5 cursor-grab active:cursor-grabbing shrink-0 border-b border-white/10">
+        <div className="flex items-center gap-2">
+          <GripVertical size={14} className="text-white/30" />
+          {icon}
+          <span className="text-white font-semibold text-sm">{label}</span>
+        </div>
+        <button
+          className="text-white/30 hover:text-white/70 transition-colors"
+          onMouseDown={e => e.stopPropagation()}
+          onClick={() => removeCard(id)}
+        >
+          <X size={13} />
+        </button>
+      </div>
+    )
+  }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      {/* Module manager toolbar */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-[rgba(1,2,5,0.10)] shrink-0 bg-white dark:bg-[#0F0F0F]">
-        <div className="flex items-center gap-2">
-          <LayoutGrid size={14} className="text-[#6B6B6B]" />
-          <span className="text-xs font-medium text-[#4A4A4A] dark:text-yellow-400/60">Dashboard</span>
-          <span className="text-xs text-[#6B6B6B]">· {visibleModules.length} modules · drag header to move · drag corner to resize</span>
-        </div>
-        <div className="relative">
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {/* ── Add card bar ── */}
+      {hiddenCards.length > 0 && (
+        <div className="flex items-center gap-2 px-1 pb-2 shrink-0 relative">
           <button
-            onClick={() => setAddMenuOpen(v => !v)}
-            disabled={hiddenModules.length === 0}
-            className={cn(
-              'flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-colors',
-              hiddenModules.length === 0
-                ? 'opacity-40 cursor-not-allowed border-[rgba(1,2,5,0.10)] text-[#6B6B6B]'
-                : 'border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-yellow-400 hover:bg-indigo-50 dark:hover:bg-yellow-400/10'
-            )}
+            onClick={() => setShowAddMenu(v => !v)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/60 hover:text-white text-xs font-medium transition-all"
           >
-            <Plus size={11} /> Add module
+            <Plus size={12} /> Add card
           </button>
-          {addMenuOpen && hiddenModules.length > 0 && (
-            <div className="absolute right-0 top-8 w-44 bg-white dark:bg-[#0F0F0F] border border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] rounded-xl shadow-xl z-20 overflow-hidden">
-              {hiddenModules.map(m => (
+          {showAddMenu && (
+            <div className="absolute top-full left-0 mt-1 bg-[#0F1428] border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden">
+              {hiddenCards.map(c => (
                 <button
-                  key={m.key}
-                  onClick={() => { addDashboardModule(m.key); setAddMenuOpen(false) }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[#1A1A1F] dark:text-yellow-400/70 hover:bg-[#E2E2E3] dark:hover:bg-[#242424] transition-colors"
+                  key={c.id}
+                  onClick={() => addCard(c.id)}
+                  className="w-full text-left px-4 py-2.5 text-sm text-white/70 hover:bg-white/10 hover:text-white transition-colors whitespace-nowrap"
                 >
-                  <span>{m.emoji}</span>{m.label}
+                  {c.label}
                 </button>
               ))}
             </div>
           )}
         </div>
-      </div>
+      )}
 
-      {/* Grid area */}
-      <div ref={containerRef} className="flex-1 overflow-y-auto scrollbar-thin">
-        {visibleModules.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center h-full">
-            <LayoutGrid size={32} className="text-[#9A9A9A] mb-3" />
-            <p className="text-sm text-[#6B6B6B] dark:text-yellow-400/60 font-medium">All modules removed</p>
-            <p className="text-xs text-[#6B6B6B] mt-1">Click "Add module" above to restore</p>
-          </div>
-        ) : (
-          <GridLayout
-            layout={visibleLayout}
-            width={containerWidth}
-            gridConfig={{ cols: 12, rowHeight: 30, margin: [8, 8] as [number, number], containerPadding: [8, 8] as [number, number] }}
-            dragConfig={{ handle: '.drag-handle' }}
-            onLayoutChange={(newLayout: Layout) =>
-              setLayout(prev => {
-                const updated = new Map(Array.from(newLayout).map(l => [l.i, l]))
-                return prev.map(l => updated.has(l.i) ? { ...l, ...updated.get(l.i)! } : l)
-              })
-            }
-          >
-            {visibleModules.map(({ key, label, emoji }) => (
-              <div
-                key={key}
-                className="bg-white dark:bg-[#0F0F0F] rounded-xl border border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] overflow-hidden flex flex-col"
-              >
-                {/* Drag handle header */}
-                <div className="drag-handle flex items-center justify-between px-3 py-2 bg-[#F0F0F1]/60 dark:bg-[#1A1A1A]/60 border-b border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] cursor-grab active:cursor-grabbing shrink-0 select-none">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[#6B6B6B] text-xs leading-none">⠿</span>
-                    <span className="text-xs font-medium text-[#4A4A4A] dark:text-yellow-400/60">{emoji} {label}</span>
-                  </div>
-                  <button
-                    onMouseDown={e => e.stopPropagation()}
-                    onClick={() => removeDashboardModule(key)}
-                    className="p-0.5 text-[#9A9A9A] hover:text-[#4A4A4A] transition-colors rounded"
-                  >
-                    <X size={13} />
-                  </button>
+      {/* ── Grid ── */}
+      <div ref={containerRef} className="flex-1 overflow-y-auto">
+        <style>{`
+          .react-resizable-handle { opacity: 0; transition: opacity 0.15s; }
+          .react-grid-item:hover .react-resizable-handle { opacity: 1; }
+          .react-resizable-handle-se {
+            width: 18px; height: 18px; bottom: 6px; right: 6px;
+            background: none; border-right: 2px solid rgba(255,255,255,0.5);
+            border-bottom: 2px solid rgba(255,255,255,0.5); border-radius: 0 0 6px 0;
+          }
+          .react-grid-item.react-grid-placeholder { background: rgba(106,92,255,0.2); border-radius: 16px; }
+        `}</style>
+        <GridLayout
+          layout={layout}
+          width={width}
+          gridConfig={{ cols: 12, rowHeight: 52, margin: [12, 12], containerPadding: [0, 0] }}
+          dragConfig={{ handle: '.drag-handle' }}
+          resizeConfig={{ resizeHandles: ['se'] }}
+          compactor={verticalCompactor}
+          onLayoutChange={(l: LayoutItem[]) => setLayout(l)}
+        >
+          {/* Image & Info */}
+          {activeCards.includes('image') && (
+            <div key="image" className="bg-white/30 backdrop-blur-sm rounded-2xl overflow-hidden flex flex-col">
+              <CardHeader id="image" label="Image & Info" icon={null} />
+              <div className="relative flex-1 overflow-hidden">
+                <img
+                  src={listing.images[0]} alt={listing.title}
+                  className="w-full h-full object-cover"
+                  onError={e => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${listing.id}/800/500` }}
+                />
+                <div className="absolute top-5 left-5">
+                  <h2 className="text-white font-bold text-3xl leading-tight drop-shadow-lg">{listing.title}</h2>
+                  <p className="text-white/80 text-sm mt-1 drop-shadow">{listing.address}</p>
                 </div>
-
-                {/* Module content */}
-                <div className="flex-1 p-3 overflow-y-auto scrollbar-thin min-h-0">
-
-              {key === 'info' && (
-                <div className="space-y-3">
-                  {/* ── Image carousel (top of info) ── */}
-                  <div className="relative w-full h-52 rounded-xl overflow-hidden bg-[#E2E2E3] shrink-0">
-                    <img
-                      src={listing.images[imageIdx]}
-                      alt={listing.title}
-                      className="w-full h-full object-cover"
-                      onError={e => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${listing.id}${imageIdx}/600/300` }}
-                    />
-                    {listing.images.length > 1 && (
-                      <>
-                        <button onClick={() => setImageIdx(i => Math.max(0, i - 1))} disabled={imageIdx === 0}
-                          className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 disabled:opacity-0 transition-all">
-                          <ChevronLeft size={14} />
-                        </button>
-                        <button onClick={() => setImageIdx(i => Math.min(listing.images.length - 1, i + 1))} disabled={imageIdx === listing.images.length - 1}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 disabled:opacity-0 transition-all">
-                          <ChevronRight size={14} />
-                        </button>
-                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-                          {listing.images.map((_, i) => (
-                            <button key={i} onClick={() => setImageIdx(i)}
-                              className={cn('w-1.5 h-1.5 rounded-full transition-colors', i === imageIdx ? 'bg-white' : 'bg-white/50')} />
-                          ))}
-                        </div>
-                      </>
-                    )}
-                    <div className={cn('absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold',
-                      listing.matchType === 'perfect' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700')}>
-                      <Star size={10} fill="currentColor" />{listing.matchScore}%
-                    </div>
-                    <div className="absolute bottom-2 right-2 text-[10px] bg-black/50 text-white rounded px-1.5 py-0.5">
-                      {imageIdx + 1} / {listing.images.length}
-                    </div>
+              </div>
+              <div className="px-5 pt-3 pb-4 flex flex-col gap-3 shrink-0">
+                <div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-[#6A5CFF] font-bold text-3xl">{formatCurrency(listing.price)}</span>
+                    <span className="text-white/50 text-sm font-medium">/month</span>
                   </div>
-
-                  {/* ── Title + price ── */}
-                  <div>
-                    <h3 className="font-bold text-[#010205] dark:text-white">{listing.title}</h3>
-                    <p className="text-xs text-[#6B6B6B] flex items-center gap-1 mt-0.5"><MapPin size={11} />{listing.address}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="text-xl font-bold text-indigo-600 dark:text-yellow-400">
-                        {formatCurrency(listing.price)}<span className="text-xs font-normal text-[#6B6B6B]">/mo</span>
-                      </span>
-                      {listing.originalPrice && listing.originalPrice > listing.price && (
-                        <span className="text-xs text-[#6B6B6B] line-through">{formatCurrency(listing.originalPrice)}</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* ── Stats grid ── */}
-                  <div className="grid grid-cols-4 gap-2">
-                    {[
-                      { label: 'Beds', value: listing.bedrooms },
-                      { label: 'Bath', value: `${listing.bathrooms}` },
-                      { label: 'Sqft', value: listing.sqft.toLocaleString() },
-                      { label: 'Commute', value: `${listing.commuteTime}m` },
-                    ].map(({ label, value }) => (
-                      <div key={label} className="bg-[#F0F0F1]/50 dark:bg-[#1A1A1A]/50 rounded-lg p-2 text-center">
-                        <div className="text-sm font-semibold text-[#010205] dark:text-white">{value}</div>
-                        <div className="text-[10px] text-[#6B6B6B]">{label}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* ── Details table ── */}
-                  <div className="space-y-1.5">
-                    {[
-                      { label: 'Available', value: listing.availableFrom },
-                      { label: 'Lease', value: listing.leaseLength },
-                      { label: 'Deposit', value: formatCurrency(listing.deposit) },
-                      { label: 'Landlord', value: listing.landlord },
-                      { label: 'Pets', value: listing.pets ? 'Allowed' : 'Not allowed' },
-                      { label: 'Laundry', value: listing.laundry },
-                      { label: 'Parking', value: listing.parking ? 'Included' : 'Not included' },
-                    ].map(({ label, value }) => (
-                      <div key={label} className="flex justify-between py-1 border-b border-[rgba(1,2,5,0.06)] text-xs">
-                        <span className="text-[#6B6B6B]">{label}</span>
-                        <span className="font-medium text-[#010205] dark:text-white">{value}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* ── Tags ── */}
-                  <div className="flex flex-wrap gap-1">
-                    {listing.tags.map(tag => (
-                      <Badge key={tag} variant="secondary" className="text-[10px] px-2 py-0.5">{tag}</Badge>
-                    ))}
-                  </div>
-
-                  {/* ── Actions ── */}
-                  <div className="flex gap-2">
-                    <Button className="flex-1 h-8 text-xs gap-1" onClick={() => addToNegotiation(listing.id)} disabled={inCart}>
-                      {inCart ? <><CheckCircle2 size={12} />In negotiation</> : <><Plus size={12} />Negotiate</>}
-                    </Button>
-                    <Button variant="outline" className="h-8 text-xs gap-1"><Calendar size={12} />Tour</Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><Bookmark size={13} /></Button>
+                  <div className="flex items-center gap-3 mt-1 text-white font-semibold text-sm">
+                    <span>{listing.bedrooms}</span><span className="text-white/30">|</span>
+                    <span>{listing.bathrooms} Bath</span><span className="text-white/30">|</span>
+                    <span>{listing.sqft} ft</span>
                   </div>
                 </div>
-              )}
+                <div className="border-t border-white/20 pt-3 grid grid-cols-3 divide-x divide-white/20">
+                  {[
+                    { label: 'Move in date', value: moveInDate },
+                    { label: 'Lease Length', value: listing.leaseLength },
+                    { label: 'Host Contact', value: listing.landlord },
+                  ].map(({ label, value }, i) => (
+                    <div key={label} className={i === 0 ? 'pr-4' : i === 1 ? 'px-4' : 'pl-4'}>
+                      <div className="text-white/50 text-xs mb-1">{label}</div>
+                      <div className="text-white text-sm font-medium truncate">{value}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t border-white/20 pt-3 flex items-center gap-8">
+                  {amenities.map(({ label, icon }) => (
+                    <div key={label} className="flex items-center gap-2.5 text-white text-sm">
+                      <img src={icon} alt={label} className="w-7 h-7 object-contain" />
+                      <span>{label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
-              {key === 'rationale' && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <Sparkles size={13} className="text-indigo-500" />
-                    <span className="text-xs font-semibold text-indigo-700 dark:text-yellow-300 uppercase tracking-wide">Why this matches you</span>
-                  </div>
-                  <ul className="space-y-2">
+          {/* Rationale */}
+          {activeCards.includes('rationale') && (
+            <div key="rationale" className="bg-white/30 backdrop-blur-sm rounded-2xl flex flex-col overflow-hidden">
+              <CardHeader id="rationale" label="Rationale" icon={<Sparkles size={13} className="text-white" />} />
+              <div className="flex-1 overflow-y-auto p-5 scrollbar-thin">
+                <p className="text-white/70 text-sm leading-relaxed">{listing.aiExplanation}</p>
+                {listing.aiRationale.length > 0 && (
+                  <ul className="mt-3 space-y-1.5">
                     {listing.aiRationale.map((r, i) => (
-                      <li key={i} className="flex items-start gap-2 text-xs text-[#4A4A4A] dark:text-yellow-400/60">
-                        <CheckCircle2 size={11} className="text-emerald-500 mt-0.5 shrink-0" />{r}
+                      <li key={i} className="flex items-start gap-2 text-xs text-white/60">
+                        <span className="text-[#6A5CFF] shrink-0 mt-0.5">•</span>{r}
                       </li>
                     ))}
                   </ul>
-                  <p className="text-xs text-[#6B6B6B] dark:text-yellow-400/60 italic leading-relaxed border-l-2 border-indigo-200 dark:border-indigo-700 pl-3">
-                    {listing.aiExplanation}
-                  </p>
-                </div>
-              )}
-
-              {key === 'map' && (
-                <MapView
-                  listings={filteredListings}
-                  selectedId={listing.id}
-                  onSelect={setSelectedListing}
-                  height="h-full"
-                />
-              )}
-
-              {key === 'neighborhood' && (
-                <div className="space-y-3">
-                  {/* Neighborhood name */}
-                  <div className="flex items-center gap-2">
-                    <MapPin size={13} className="text-indigo-500 shrink-0" />
-                    <span className="font-semibold text-sm text-[#010205] dark:text-white">{listing.neighborhood}</span>
-                  </div>
-
-                  {/* Score cards */}
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { label: 'Safety', value: listing.safetyScore, icon: Shield, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
-                      { label: 'Walk', value: Math.min(99, listing.safetyScore + 7), icon: Coffee, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/20' },
-                      { label: 'Transit', value: Math.min(99, listing.safetyScore - 4), icon: Train, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-                    ].map(({ label, value, icon: Icon, color, bg }) => (
-                      <div key={label} className={cn('rounded-xl p-3 text-center', bg)}>
-                        <Icon size={14} className={cn('mx-auto mb-1', color)} />
-                        <div className={cn('text-base font-bold', color)}>{value}</div>
-                        <div className="text-[10px] text-[#6B6B6B]">{label} score</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Price trend */}
-                  <div className="bg-[#F0F0F1]/50 dark:bg-[#1A1A1A]/50 rounded-xl p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-medium text-[#4A4A4A] dark:text-yellow-400/60">Rent trend (6 mo)</span>
-                      {listing.priceTrend[listing.priceTrend.length - 1] < listing.priceTrend[0]
-                        ? <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-0.5"><TrendingDown size={10} />Dropping</span>
-                        : <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">Rising</span>
-                      }
-                    </div>
-                    <div className="flex items-end gap-0.5 h-10">
-                      {listing.priceTrend.map((p, i) => {
-                        const max = Math.max(...listing.priceTrend)
-                        const min = Math.min(...listing.priceTrend)
-                        const h = max === min ? 50 : ((p - min) / (max - min)) * 100
-                        return (
-                          <div key={i} className="flex-1 flex flex-col justify-end gap-0.5">
-                            <div
-                              className={cn('w-full rounded-sm', i === listing.priceTrend.length - 1 ? 'bg-indigo-400 dark:bg-yellow-400' : 'bg-[#E2E2E3] dark:bg-[#1A1A1A]')}
-                              style={{ height: `${Math.max(12, h)}%` }}
-                            />
-                            <span className="text-[8px] text-[#6B6B6B] text-center">{['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'][i]}</span>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Nearby POIs */}
-                  <div>
-                    <p className="text-[10px] font-semibold text-[#6B6B6B] uppercase tracking-wider mb-2">Nearby Places</p>
-                    <div className="space-y-2">
-                      {listing.nearbyPOIs.map(poi => {
-                        const Icon = poiIcons[poi.type] || MapPin
-                        return (
-                          <div key={poi.name} className="flex items-center justify-between text-xs">
-                            <div className="flex items-center gap-2 text-[#4A4A4A] dark:text-yellow-400/60">
-                              <div className="w-6 h-6 rounded-lg bg-[#E2E2E3] dark:bg-[#1A1A1A] flex items-center justify-center shrink-0">
-                                <Icon size={11} className="text-[#6B6B6B]" />
-                              </div>
-                              {poi.name}
-                            </div>
-                            <span className="text-[#6B6B6B] text-[10px]">{poi.distance}</span>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {key === 'negotiation' && <NegotiationHistory listingId={listing.id} />}
-                </div>
+                )}
               </div>
-            ))}
+            </div>
+          )}
 
-          </GridLayout>
-        )}
+          {/* Map */}
+          {activeCards.includes('map') && (
+            <div key="map" className="rounded-2xl overflow-hidden flex flex-col">
+              <MapContainer
+                center={mapCenter} zoom={12}
+                scrollWheelZoom={true} zoomControl={false}
+                style={{ width: '100%', height: '100%' }}
+              >
+                <TileLayer
+                  url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                  attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+                />
+                <Marker position={[listing.lat, listing.lng]} />
+                <MapInvalidator />
+              </MapContainer>
+            </div>
+          )}
+
+          {/* Neighborhood */}
+          {activeCards.includes('neighborhood') && (
+            <div key="neighborhood" className="bg-white/30 backdrop-blur-sm rounded-2xl flex flex-col overflow-hidden">
+              <CardHeader id="neighborhood" label="Neighborhood Info" icon={<MapPin size={13} className="text-white" />} />
+              <div className="flex-1 overflow-y-auto p-5 scrollbar-thin">
+                <p className="text-white/70 text-sm leading-relaxed">
+                  {listing.neighborhood} is a vibrant area with easy access to transit and local amenities.
+                  {listing.nearbyPOIs.length > 0 && (
+                    <> Nearby highlights include {listing.nearbyPOIs.map(p => `${p.name} (${p.distance})`).join(', ')}.</>
+                  )}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Negotiation */}
+          {activeCards.includes('negotiation') && (
+            <div key="negotiation" className="bg-white/30 backdrop-blur-sm rounded-2xl flex flex-col overflow-hidden">
+              <CardHeader id="negotiation" label="Negotiation" icon={<MessageSquare size={13} className="text-white" />} />
+              <div className="flex-1 overflow-y-auto p-5 scrollbar-thin">
+                <NegotiationChat listingId={listing.id} />
+              </div>
+            </div>
+          )}
+        </GridLayout>
       </div>
     </div>
   )
@@ -629,15 +464,16 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
    Main Match
 ───────────────────────────────────────── */
 type SortOrder = 'price-asc' | 'price-desc'
+type ViewMode = 'grid' | 'split' | 'detail'
 
 export function Match() {
   const {
     listings, selectedListingId, setSelectedListing,
     negStatusFilter, setNegStatusFilter,
-    listSidebarOpen, toggleListSidebar,
   } = useStore()
 
   const [sortOrder, setSortOrder] = useState<SortOrder>('price-asc')
+  const [view, setView] = useState<ViewMode>(selectedListingId ? 'split' : 'grid')
 
   const filtered = (negStatusFilter === 'all'
     ? listings
@@ -646,124 +482,135 @@ export function Match() {
     sortOrder === 'price-asc' ? a.price - b.price : b.price - a.price
   )
 
-  const selectedListing = filtered.find(l => l.id === selectedListingId) ?? filtered[0] ?? listings[0]
+  const selectedListing = listings.find(l => l.id === selectedListingId) ?? null
+
+  function handleSelectApt(id: string) {
+    setSelectedListing(id)
+    if (view === 'grid') setView('split')
+  }
+
+  function handleExpand() {
+    setSelectedListing(null)
+    setView('grid')
+  }
+
+  function handleFoldToggle() {
+    setView(v => v === 'split' ? 'detail' : 'split')
+  }
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* ── Status filter tabs ── */}
-      <div className="flex items-center gap-1 px-4 py-2.5 border-b border-[rgba(1,2,5,0.10)] bg-white dark:bg-[#0F0F0F] shrink-0">
-        {STATUS_FILTERS.map(({ key, label }) => {
-          const count = key === 'all'
-            ? listings.length
-            : listings.filter(l => negStatusOf(l) === key).length
-          return (
+
+      {/* ── Filter / control bar ── */}
+      <div className="flex items-center gap-4 px-6 py-4 shrink-0">
+        {/* Status filters */}
+        <span className="text-white font-semibold text-sm whitespace-nowrap">Negotiation Progress</span>
+        <div className="flex items-center gap-2">
+          {STATUS_FILTERS.map(({ key, label }) => (
             <button
               key={key}
               onClick={() => setNegStatusFilter(key)}
               className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+                'px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap',
                 negStatusFilter === key
-                  ? 'bg-indigo-600 dark:bg-yellow-400 dark:text-black text-white shadow-sm'
-                  : 'text-[#6B6B6B] dark:text-yellow-400/60 hover:text-[#1A1A1F] dark:hover:text-yellow-400/70 hover:bg-[#F0F0F1] dark:hover:bg-[#1A1A1A]'
+                  ? 'bg-[#6A5CFF] text-white shadow-lg shadow-[#6A5CFF]/30'
+                  : 'bg-white/10 text-white/60 hover:bg-white/20 hover:text-white'
               )}
             >
               {label}
-              <span className={cn(
-                'text-[10px] px-1.5 py-0.5 rounded-full font-bold',
-                negStatusFilter === key
-                  ? 'bg-white/25 text-white dark:bg-black/25 dark:text-black'
-                  : 'bg-[#E2E2E3] dark:bg-[#1A1A1A] text-[#6B6B6B] dark:text-yellow-400/60'
-              )}>
-                {count}
-              </span>
             </button>
-          )
-        })}
+          ))}
+        </div>
+
         <div className="flex-1" />
-        <span className="text-xs text-[#6B6B6B]">{filtered.length} apartments</span>
-      </div>
 
-      {/* ── Body: sidebar + detail ── */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* LEFT: collapsible list sidebar */}
-        <aside className={cn(
-          'flex flex-col border-r border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] bg-white dark:bg-[#0F0F0F] transition-all duration-300 shrink-0 overflow-hidden',
-          listSidebarOpen ? 'w-72' : 'w-0'
-        )}>
-          {listSidebarOpen && (
-            <>
-              {/* Sidebar header */}
-              <div className="flex items-center justify-between px-3 py-2.5 border-b border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] shrink-0">
-                <span className="text-xs font-semibold text-[#1A1A1F] dark:text-yellow-400/70">
-                  Apartments
-                </span>
-                <div className="flex items-center gap-1">
-                  {/* Price sort toggle */}
-                  <button
-                    onClick={() => setSortOrder(o => o === 'price-asc' ? 'price-desc' : 'price-asc')}
-                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium text-[#6B6B6B] dark:text-yellow-400/60 hover:bg-[#F0F0F1] dark:hover:bg-[#1A1A1A] transition-colors"
-                    title="Sort by price"
-                  >
-                    <ArrowUpDown size={11} />
-                    {sortOrder === 'price-asc' ? 'Low→High' : 'High→Low'}
-                  </button>
-                  <button
-                    onClick={toggleListSidebar}
-                    className="p-1 rounded-lg text-[#6B6B6B] hover:text-[#4A4A4A] hover:bg-[#F0F0F1] dark:hover:bg-[#1A1A1A] transition-colors"
-                  >
-                    <PanelLeftClose size={15} />
-                  </button>
-                </div>
-              </div>
-              {/* Listing cards */}
-              <div className="flex-1 overflow-y-auto scrollbar-thin p-2 space-y-2">
-                {filtered.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center px-4">
-                    <p className="text-sm text-[#6B6B6B] dark:text-yellow-400/60">No apartments in this status</p>
-                  </div>
-                ) : (
-                  filtered.map(l => (
-                    <ListCard
-                      key={l.id}
-                      listing={l}
-                      selected={selectedListingId === l.id}
-                      onClick={() => setSelectedListing(l.id)}
-                    />
-                  ))
-                )}
-              </div>
-            </>
-          )}
-        </aside>
-
-        {/* Sidebar toggle when collapsed */}
-        {!listSidebarOpen && (
+        {/* Sort — only shown in grid view; split/detail has it inside the list panel */}
+        {view === 'grid' && (
           <button
-            onClick={toggleListSidebar}
-            className="flex flex-col items-center justify-center w-8 border-r border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] bg-white dark:bg-[#0F0F0F] hover:bg-[#F0F0F1] dark:hover:bg-[#1A1A1A] transition-colors text-[#6B6B6B] hover:text-[#1A1A1F] gap-1"
+            onClick={() => setSortOrder(o => o === 'price-asc' ? 'price-desc' : 'price-asc')}
+            className="text-white/60 hover:text-white transition-colors"
+            title="Sort by price"
           >
-            <PanelLeftOpen size={14} />
-            <span className="text-[9px] writing-mode-vertical font-medium tracking-wide"
-              style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}>
-              Apartments
-            </span>
+            <ListFilter size={18} />
           </button>
         )}
 
-        {/* RIGHT: modular detail dashboard */}
-        <div className="flex-1 overflow-hidden bg-[#F6F6F7] dark:bg-black">
-          {selectedListing ? (
-            <DetailDashboard listing={selectedListing} filteredListings={filtered} />
-          ) : (
+      </div>
+
+      {/* ── Content ── */}
+      {view === 'grid' && (
+        <div className="flex-1 overflow-y-auto scrollbar-thin px-6 pb-6">
+          {filtered.length === 0 ? (
             <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="text-5xl mb-4">🏠</div>
-                <p className="text-sm text-[#6B6B6B] dark:text-yellow-400/60">Select an apartment to view details</p>
-              </div>
+              <p className="text-white/40 text-sm">No apartments in this status</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-4 gap-4">
+              {filtered.map(l => (
+                <GridCard
+                  key={l.id}
+                  listing={l}
+                  selected={selectedListingId === l.id}
+                  onClick={() => handleSelectApt(l.id)}
+                />
+              ))}
             </div>
           )}
         </div>
-      </div>
+      )}
+
+      {view === 'split' && selectedListing && (
+        <div className="flex-1 overflow-hidden flex gap-4 px-6 pb-6">
+          {/* Left panel */}
+          <div className="w-64 shrink-0 bg-white/10 backdrop-blur-sm rounded-2xl flex flex-col overflow-hidden">
+            {/* Panel header with icons */}
+            <div className="flex items-center justify-between px-4 py-3 shrink-0">
+              <button
+                onClick={() => setSortOrder(o => o === 'price-asc' ? 'price-desc' : 'price-asc')}
+                className="text-white/60 hover:text-white transition-colors"
+              >
+                <ListFilter size={18} />
+              </button>
+              <div className="flex items-center gap-3">
+                <button onClick={handleFoldToggle} className="text-white/60 hover:text-white transition-colors" title="Fold list">
+                  <ChevronLeft size={18} />
+                </button>
+                <button onClick={handleExpand} className="text-white/60 hover:text-white transition-colors" title="Full grid">
+                  <LayoutGrid size={18} />
+                </button>
+              </div>
+            </div>
+            {/* Card list */}
+            <div className="flex-1 overflow-y-auto space-y-3 px-3 pb-3 scrollbar-thin">
+              {filtered.map(l => (
+                <ListCard
+                  key={l.id}
+                  listing={l}
+                  selected={selectedListingId === l.id}
+                  onClick={() => setSelectedListing(l.id)}
+                />
+              ))}
+            </div>
+          </div>
+          {/* Detail */}
+          <AptDetail listing={selectedListing} />
+        </div>
+      )}
+
+      {view === 'detail' && selectedListing && (
+        <div className="flex-1 overflow-hidden px-6 pb-6 flex gap-4">
+          {/* Collapsed panel — just icons */}
+          <div className="shrink-0 bg-white/10 backdrop-blur-sm rounded-2xl flex flex-col items-center py-3 px-2 gap-3">
+            <button onClick={handleFoldToggle} className="text-white/60 hover:text-white transition-colors" title="Unfold list">
+              <ChevronRight size={18} />
+            </button>
+            <button onClick={handleExpand} className="text-white/60 hover:text-white transition-colors" title="Full grid">
+              <LayoutGrid size={18} />
+            </button>
+          </div>
+          <AptDetail listing={selectedListing} />
+        </div>
+      )}
     </div>
   )
 }
