@@ -32,8 +32,9 @@ class ListingWriter:
     """
     Persists ParsedListing instances to the database using AsyncSession.
 
-    Duplicate detection is on (streeteasy_id).  Falls back to (name, price)
-    if streeteasy_id is not yet stored as a column — add a migration when ready.
+    Duplicate detection is on streeteasy_id (unique per listing).
+    Falls back to (name, price) for any row that pre-dates the streeteasy_id
+    column being added.
     """
 
     def __init__(self, session: AsyncSession) -> None:
@@ -50,26 +51,41 @@ class ListingWriter:
             try:
                 neighbor = await self._get_or_create_neighbor(listing)
 
-                # Duplicate check on (name, price)
-                result = await self._session.execute(
-                    select(Apartment).filter_by(
-                        name=listing.name,
-                        price=listing.price,
+                # Primary duplicate check: streeteasy_id (canonical, stable).
+                existing = None
+                if listing.streeteasy_id:
+                    result = await self._session.execute(
+                        select(Apartment).filter_by(
+                            streeteasy_id=listing.streeteasy_id,
+                        )
                     )
-                )
-                existing = result.scalar_one_or_none()
+                    existing = result.scalar_one_or_none()
+
+                # Fallback: (name, price) for rows without a streeteasy_id.
+                if existing is None:
+                    result = await self._session.execute(
+                        select(Apartment).filter_by(
+                            name=listing.name,
+                            price=listing.price,
+                        )
+                    )
+                    existing = result.scalar_one_or_none()
 
                 if existing:
                     logger.debug(
-                        "Skipping duplicate: %s @ $%d", listing.name, listing.price
+                        "Skipping duplicate: %s @ $%d (streeteasy_id=%s)",
+                        listing.name,
+                        listing.price,
+                        listing.streeteasy_id,
                     )
                     skipped += 1
                     continue
 
-                # Parse move_in_date string → date object if needed
+                # Parse move_in_date string → date object if needed.
                 move_in = _parse_date(listing.move_in_date)
 
                 apt = Apartment(
+                    streeteasy_id=listing.streeteasy_id,
                     name=listing.name,
                     bedroom_type=listing.bedroom_type,
                     price=listing.price,
@@ -79,9 +95,9 @@ class ListingWriter:
                     longitude=listing.longitude,
                     move_in_date=move_in,
                     lease_length_months=listing.lease_length_months,
-                    laundry=listing.laundry      or [],
-                    parking=listing.parking      or [],
-                    amenities=listing.amenities  or [],
+                    laundry=_to_pg_array(listing.laundry),
+                    parking=_to_pg_array(listing.parking),
+                    amenities=_to_pg_array(listing.amenities),
                     pets=listing.pets            or False,
                     images=listing.images        or [],
                     image_labels=listing.image_labels or [],
@@ -119,7 +135,9 @@ class ListingWriter:
         if neighbor:
             return neighbor
 
-        # Use Claude-generated description if available, else a stub
+        # Use Claude-generated description if available, else a stub.
+        # NOTE: the stub is stored in NeighborInfo.description only — never
+        # in .name — so it won't contaminate future neighborhood lookups.
         description = (
             getattr(listing, "_claude_neighborhood_description", None)
             or f"{name} neighborhood in NYC. Description to be enriched by AI agent."
@@ -136,6 +154,18 @@ class ListingWriter:
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _to_pg_array(values: list[str] | None) -> list[str]:
+    """
+    Return a clean list for SQLAlchemy → asyncpg → PostgreSQL array binding.
+
+    asyncpg maps Python list[str] to a TEXT[] column natively, but it only
+    adds double-quotes around elements that contain spaces, commas, braces, or
+    backslashes.  Passing the list directly (rather than a hand-built
+    '{...}' string literal) ensures correct quoting every time.
+    """
+    return list(values) if values else []
+
+
 def _parse_date(value: str | None):
     """
     Convert a move_in_date string to a datetime.date.
@@ -144,7 +174,7 @@ def _parse_date(value: str | None):
     if not value:
         return None
     from datetime import date
-    # Already a date object
+    # Already a date object.
     if isinstance(value, date):
         return value
     import re

@@ -283,8 +283,12 @@ class StreetEasyEmailParser:
         if len(lines) < 3:
             return None
 
-        # Line 0: neighborhood (may be all-caps in reco emails — title-case it)
-        neighborhood = lines[0].title()
+        # Line 0: neighborhood (may be all-caps in reco emails — title-case it).
+        # Guard against stale DB values like "Forest Hills neighborhood in NYC.
+        # Description to be enriched by AI agent." bleeding back in — take only
+        # the portion before "neighborhood" or the first sentence-ending period.
+        raw_neighborhood = lines[0].split("neighborhood")[0].split(".")[0].strip()
+        neighborhood = raw_neighborhood.title()
 
         # Line 1: address
         address = lines[1]
@@ -324,9 +328,10 @@ class StreetEasyEmailParser:
                 streeteasy_id = url_match.group(1)
                 continue
 
-            # Brokerage / agent contact — "Agency Name (address)"
+            # Brokerage / agent contact — "Agency Name (address)".
+            # Strip leading "Listing by " prefix if present.
             if re.search(r"\(.*\)", line) and host_contact is None:
-                host_contact = line
+                host_contact = re.sub(r"^Listing by\s+", "", line, flags=re.IGNORECASE)
 
         if not streeteasy_id:
             logger.debug("No StreetEasy listing URL found in block: %s", lines)
