@@ -23,7 +23,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import Apartment, NeighborInfo
 
 if TYPE_CHECKING:
-    from app.parsers.streeteasy_email import ParsedListing
+    from parsers.streeteasy_email import ParsedListing
 
 logger = logging.getLogger(__name__)
 
@@ -84,13 +84,16 @@ class ListingWriter:
                 # Parse move_in_date string → date object if needed.
                 move_in = _parse_date(listing.move_in_date)
 
+                host_phone, host_email = _split_contact(listing.host_contact)
+
                 apt = Apartment(
                     streeteasy_id=listing.streeteasy_id,
                     name=listing.name,
                     bedroom_type=listing.bedroom_type,
                     price=listing.price,
                     neighbor_id=neighbor.id if neighbor else None,
-                    host_contact=listing.host_contact,
+                    host_phone=host_phone,
+                    host_email=host_email,
                     latitude=listing.latitude,
                     longitude=listing.longitude,
                     move_in_date=move_in,
@@ -154,7 +157,24 @@ class ListingWriter:
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _to_pg_array(values: list[str] | None) -> list[str]:
+def _split_contact(value: str | None) -> tuple[str | None, str | None]:
+    """
+    Split a raw host_contact string into (phone, email).
+    The scraper provides strings like "Brokerage Name (address)" or
+    a phone number like "+1 212-555-1234". Email addresses are rare
+    in StreetEasy data but handled here for completeness.
+    """
+    if not value:
+        return None, None
+    import re as _re
+    email_match = _re.search(r"[\w.+-]+@[\w-]+\.[a-zA-Z]{2,}", value)
+    phone_match = _re.search(r"[\+\d][\d\s\-().]{6,}", value)
+    email = email_match.group(0) if email_match else None
+    phone = phone_match.group(0).strip() if phone_match else None
+    return phone, email
+
+
+def _to_pg_array(values) -> list:
     """
     Return a clean list for SQLAlchemy → asyncpg → PostgreSQL array binding.
 

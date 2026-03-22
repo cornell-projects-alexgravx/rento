@@ -1,5 +1,5 @@
 """
-Tests for listing_scraper.py — uses the real scraped HTML (se_debug2.html).
+Tests for streeteasy_scraper.py — uses the real scraped HTML (se_debug2.html).
 No network or API key needed for the unit tests.
 
 Run modes:
@@ -16,7 +16,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from listing_scraper import (
+from streeteasy_scraper import (
     ListingScraper, ListingDetail, _merge,
     _rooms_to_bedroom_type, _to_float, _to_int, _parse_price_text,
     AMENITY_LABELS,

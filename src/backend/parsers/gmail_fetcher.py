@@ -57,9 +57,11 @@ class GmailFetcher:
         self,
         credentials_path: str = "credentials.json",
         token_path: str = "token.json",
+        query_override: str | None = None,
     ) -> None:
         self._credentials_path = credentials_path
         self._token_path = token_path
+        self._query_override = query_override   # replaces STREETEASY_QUERY when set
         self._service = None  # lazy init
 
     # ---------------------------------------------------------------------------
@@ -88,7 +90,7 @@ class GmailFetcher:
             received after this date, e.g. "2026/03/01".
         """
         service = self._get_service()
-        query = STREETEASY_QUERY
+        query = self._query_override if self._query_override is not None else STREETEASY_QUERY
         if after_date:
             query += f" after:{after_date}"
 

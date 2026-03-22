@@ -3,8 +3,9 @@ node_modules/
 
 # Secrets & credentials - NEVER commit these
 .env
-src/first-draft/credentials.json
-src/first-draft/token.json
+src/backend/credentials.json
+src/backend/token.json
+src/backend/*.eml
 
 # Python
 __pycache__/
