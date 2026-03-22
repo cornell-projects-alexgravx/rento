@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from streeteasy_email import StreetEasyEmailParser
 
-EML_PATH = "/home/max/Desktop/2 Results for Queens - 3_21_26.eml"
+EML_PATH = "test.eml"
 
 
 def test_parse_sample_eml():
