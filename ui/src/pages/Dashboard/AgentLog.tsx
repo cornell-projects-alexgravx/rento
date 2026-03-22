@@ -105,10 +105,10 @@ function StageHeader({
   color: 'indigo' | 'sky' | 'violet' | 'amber'
 }) {
   const palette = {
-    indigo: { bg: 'bg-indigo-50 dark:bg-indigo-900/20', border: 'border-indigo-200 dark:border-indigo-800', icon: 'bg-indigo-500', text: 'text-indigo-700 dark:text-indigo-300', badge: 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300' },
-    sky:    { bg: 'bg-sky-50 dark:bg-sky-900/20',       border: 'border-sky-200 dark:border-sky-800',       icon: 'bg-sky-500',    text: 'text-sky-700 dark:text-sky-300',       badge: 'bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300' },
-    violet: { bg: 'bg-violet-50 dark:bg-violet-900/20', border: 'border-violet-200 dark:border-violet-800', icon: 'bg-violet-500', text: 'text-violet-700 dark:text-violet-300', badge: 'bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300' },
-    amber:  { bg: 'bg-amber-50 dark:bg-amber-900/20',   border: 'border-amber-200 dark:border-amber-800',   icon: 'bg-amber-500',  text: 'text-amber-700 dark:text-amber-300',   badge: 'bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300' },
+    indigo: { bg: 'bg-indigo-900/20', border: 'border-indigo-800', icon: 'bg-indigo-500', text: 'text-indigo-300', badge: 'bg-indigo-900/50 text-indigo-300' },
+    sky:    { bg: 'bg-sky-900/20',    border: 'border-sky-800',    icon: 'bg-sky-500',    text: 'text-sky-300',    badge: 'bg-sky-900/50 text-sky-300' },
+    violet: { bg: 'bg-violet-900/20', border: 'border-violet-800', icon: 'bg-violet-500', text: 'text-violet-300', badge: 'bg-violet-900/50 text-violet-300' },
+    amber:  { bg: 'bg-amber-900/20',  border: 'border-amber-800',  icon: 'bg-amber-500',  text: 'text-amber-300',  badge: 'bg-amber-900/50 text-amber-300' },
   }[color]
 
   return (
@@ -153,7 +153,7 @@ function SearchStage() {
       <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-3">
 
         {/* Data coverage */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3">
+        <div className="bg-zinc-900 rounded-xl border border-zinc-700 p-3">
           <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Data Coverage</p>
           <div className="grid grid-cols-2 gap-2">
             {[
@@ -162,7 +162,7 @@ function SearchStage() {
               { label: 'Updated', value: '91', sub: 'price changes', color: 'text-amber-600 dark:text-amber-400' },
               { label: 'Removed', value: '14', sub: 'no longer listed', color: 'text-red-500' },
             ].map(({ label, value, sub, color }) => (
-              <div key={label} className="bg-slate-50 dark:bg-slate-700/40 rounded-lg p-2">
+              <div key={label} className="bg-zinc-800/40 rounded-lg p-2">
                 <div className={cn('text-lg font-bold leading-tight', color)}>{value}</div>
                 <div className="text-[10px] font-medium text-slate-600 dark:text-slate-300 leading-tight">{label}</div>
                 <div className="text-[9px] text-slate-400 leading-tight">{sub}</div>
@@ -172,7 +172,7 @@ function SearchStage() {
         </div>
 
         {/* Sources */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3">
+        <div className="bg-zinc-900 rounded-xl border border-zinc-700 p-3">
           <div className="flex items-center gap-1.5 mb-2">
             <Globe size={11} className="text-slate-400" />
             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Sources</p>
@@ -193,12 +193,12 @@ function SearchStage() {
         </div>
 
         {/* Image Analysis Agent Log */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60">
+        <div className="bg-zinc-900 rounded-xl border border-zinc-700 overflow-hidden">
+          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-zinc-700 bg-zinc-800/60">
             <Image size={11} className="text-indigo-500" />
             <p className="text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Image Analysis Agent</p>
           </div>
-          <div className="divide-y divide-slate-100 dark:divide-slate-700">
+          <div className="divide-y divide-zinc-700">
             {IMAGE_LOGS.map(log => (
               <div key={log.id} className="px-3 py-2">
                 <div className="flex items-start gap-1.5 mb-1">
@@ -238,7 +238,7 @@ function FilteringStage() {
       <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-3">
 
         {/* Preference status */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3">
+        <div className="bg-zinc-900 rounded-xl border border-zinc-700 p-3">
           <div className="flex items-start gap-1.5 mb-2.5">
             <Sparkles size={11} className="text-sky-500 mt-0.5 shrink-0" />
             <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed italic">
@@ -253,12 +253,12 @@ function FilteringStage() {
         </div>
 
         {/* Filter log */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60">
+        <div className="bg-zinc-900 rounded-xl border border-zinc-700 overflow-hidden">
+          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-zinc-700 bg-zinc-800/60">
             <Filter size={11} className="text-sky-500" />
             <p className="text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Filtering Log</p>
           </div>
-          <div className="divide-y divide-slate-100 dark:divide-slate-700">
+          <div className="divide-y divide-zinc-700">
             {FILTER_LOGS.map(entry => (
               <div key={entry.id} className="px-3 py-2">
                 {entry.kind === 'rule' ? (
@@ -317,7 +317,7 @@ function NegotiationStage() {
       <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-3">
 
         {/* Overview stats */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3">
+        <div className="bg-zinc-900 rounded-xl border border-zinc-700 p-3">
           <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Overview</p>
           <div className="grid grid-cols-3 gap-2">
             {[
@@ -325,7 +325,7 @@ function NegotiationStage() {
               { label: 'Success', value: '87%', color: 'text-emerald-600 dark:text-emerald-400' },
               { label: 'Avg. reply', value: '41m', color: 'text-slate-600 dark:text-slate-300' },
             ].map(({ label, value, color }) => (
-              <div key={label} className="bg-slate-50 dark:bg-slate-700/40 rounded-lg p-2 text-center">
+              <div key={label} className="bg-zinc-800/40 rounded-lg p-2 text-center">
                 <div className={cn('text-base font-bold', color)}>{value}</div>
                 <div className="text-[9px] text-slate-400">{label}</div>
               </div>
@@ -334,12 +334,12 @@ function NegotiationStage() {
         </div>
 
         {/* Negotiation log */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60">
+        <div className="bg-zinc-900 rounded-xl border border-zinc-700 overflow-hidden">
+          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-zinc-700 bg-zinc-800/60">
             <MessageSquare size={11} className="text-violet-500" />
             <p className="text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Negotiation Log</p>
           </div>
-          <div className="divide-y divide-slate-100 dark:divide-slate-700">
+          <div className="divide-y divide-zinc-700">
             {NEG_LOGS.map(entry => (
               <div key={entry.id} className="p-3 space-y-1.5">
                 {/* Header */}
@@ -371,7 +371,7 @@ function NegotiationStage() {
                   'rounded-xl px-2.5 py-2 text-[10px] leading-relaxed',
                   entry.type === 'sent'
                     ? 'bg-violet-50 dark:bg-violet-900/30 text-violet-900 dark:text-violet-100 rounded-tl-sm'
-                    : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-tr-sm'
+                    : 'bg-zinc-700 text-zinc-300 rounded-tr-sm'
                 )}>
                   <div className="flex items-center gap-1 mb-0.5 opacity-60">
                     {entry.type === 'sent'
@@ -409,7 +409,7 @@ function NotificationStage() {
     if (type === 'Landlord replies') return { icon: MessageSquare, color: 'text-violet-500', bg: 'bg-violet-50 dark:bg-violet-900/30' }
     if (type === 'Price drops') return { icon: TrendingDown, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/30' }
     if (type === 'New matches') return { icon: Sparkles, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/30' }
-    return { icon: Bell, color: 'text-slate-400', bg: 'bg-slate-100 dark:bg-slate-700' }
+    return { icon: Bell, color: 'text-zinc-400', bg: 'bg-zinc-700' }
   }
 
   return (
@@ -421,7 +421,7 @@ function NotificationStage() {
       <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-3">
 
         {/* Summary pills */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3">
+        <div className="bg-zinc-900 rounded-xl border border-zinc-700 p-3">
           <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Summary</p>
           <div className="grid grid-cols-2 gap-2">
             {[
@@ -430,7 +430,7 @@ function NotificationStage() {
               { label: 'Channels', value: '2', color: 'text-slate-600 dark:text-slate-300' },
               { label: 'Events', value: '4', color: 'text-indigo-600 dark:text-indigo-400' },
             ].map(({ label, value, color }) => (
-              <div key={label} className="bg-slate-50 dark:bg-slate-700/40 rounded-lg p-2">
+              <div key={label} className="bg-zinc-800/40 rounded-lg p-2">
                 <div className={cn('text-base font-bold', color)}>{value}</div>
                 <div className="text-[9px] text-slate-400">{label}</div>
               </div>
@@ -439,12 +439,12 @@ function NotificationStage() {
         </div>
 
         {/* Notification list */}
-        <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60">
+        <div className="bg-zinc-900 rounded-xl border border-zinc-700 overflow-hidden">
+          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-zinc-700 bg-zinc-800/60">
             <Bell size={11} className="text-amber-500" />
             <p className="text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Notification Log</p>
           </div>
-          <div className="divide-y divide-slate-100 dark:divide-slate-700">
+          <div className="divide-y divide-zinc-700">
             {notifications.map(n => {
               const { icon: Icon, color, bg } = iconFor(n.type)
               const t = new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -505,7 +505,7 @@ function PipelineBar({
   const effectiveRunning = runningIdx === -1 ? 1 : runningIdx
 
   return (
-    <div className="shrink-0 flex items-center justify-center gap-0 px-6 py-2 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
+    <div className="shrink-0 flex items-center justify-center gap-0 px-6 py-2 bg-zinc-900 border-b border-zinc-700">
       {STAGES.map((stage, i) => {
         const Icon = stage.icon
         const isRunning = i === effectiveRunning
@@ -523,7 +523,7 @@ function PipelineBar({
                   ? PALETTE[stage.color].pill + ' opacity-70'
                   : isDone
                   ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:opacity-80'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
               )}
             >
               {isDone && !isSelected
@@ -544,9 +544,9 @@ function PipelineBar({
 }
 
 /* ─────────────────────────────────────────
-   Main PanelAgent
+   Main AgentLog
 ───────────────────────────────────────── */
-export function PanelAgent() {
+export function AgentLog() {
   const { agentStatus, toggleAgent, preferences, updateNegotiation } = useStore()
   const [showConfig, setShowConfig] = useState(false)
   const [selectedStage, setSelectedStage] = useState<StageId | null>(null)
@@ -568,12 +568,12 @@ export function PanelAgent() {
     <div className="h-full flex flex-col overflow-hidden">
 
       {/* ── Agent control bar ── */}
-      <div className="shrink-0 flex items-center gap-3 px-4 py-2 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
+      <div className="shrink-0 flex items-center gap-3 px-4 py-2 bg-zinc-900 border-b border-zinc-700">
         <div className={cn(
           'flex items-center gap-2 flex-1 px-3 py-1.5 rounded-xl border text-xs font-medium',
           agentStatus.isRunning
             ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
-            : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-400'
+            : 'bg-zinc-800 border-zinc-700 text-zinc-400'
         )}>
           <span className={cn('w-2 h-2 rounded-full shrink-0', agentStatus.isRunning ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400')} />
           <Bot size={12} />
@@ -612,10 +612,10 @@ export function PanelAgent() {
       </div>
 
       {/* ── Agent config (collapsible footer) ── */}
-      <div className="shrink-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700">
+      <div className="shrink-0 bg-zinc-900 border-t border-zinc-700">
         <button
           onClick={() => setShowConfig(v => !v)}
-          className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-zinc-800 transition-colors"
         >
           <div className="flex items-center gap-2">
             <Settings size={13} className="text-slate-400" />
@@ -625,7 +625,7 @@ export function PanelAgent() {
         </button>
 
         {showConfig && (
-          <div className="px-4 pb-4 grid grid-cols-2 gap-4 border-t border-slate-100 dark:border-slate-700 pt-4">
+          <div className="px-4 pb-4 grid grid-cols-2 gap-4 border-t border-zinc-700 pt-4">
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <label className="text-xs text-slate-600 dark:text-slate-400">Max follow-ups per landlord</label>

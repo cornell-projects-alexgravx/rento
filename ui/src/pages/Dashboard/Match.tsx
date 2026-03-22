@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import GridLayout from 'react-grid-layout'
 import type { Layout, LayoutItem } from 'react-grid-layout'
-import { noCompactor } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import {
   MapPin, Clock, Star, Plus, Calendar, Bookmark,
@@ -54,7 +53,7 @@ function ListCard({ listing, selected, onClick }: {
     ? 'bg-emerald-500'
     : negStatusOf(listing) === 'in-progress'
     ? 'bg-amber-500'
-    : 'bg-slate-300 dark:bg-slate-600'
+    : 'bg-zinc-600'
 
   return (
     <div
@@ -63,11 +62,11 @@ function ListCard({ listing, selected, onClick }: {
         'flex gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-150 hover:shadow-sm',
         selected
           ? 'border-indigo-400 bg-indigo-50/60 dark:bg-indigo-900/15 shadow-sm'
-          : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600'
+          : 'border-zinc-700 bg-zinc-900 hover:border-slate-300 dark:hover:border-slate-600'
       )}
     >
       {/* Thumbnail */}
-      <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-slate-100 dark:bg-slate-700">
+      <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-zinc-700">
         <img
           src={listing.images[0]}
           alt={listing.title}
@@ -132,7 +131,7 @@ function MapView({ listings, selectedId, onSelect, height = 'h-56' }: {
   height?: string
 }) {
   return (
-    <div className={cn('relative w-full rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700', height)}>
+    <div className={cn('relative w-full rounded-xl overflow-hidden border border-zinc-700 bg-gradient-to-br from-zinc-800 to-zinc-700', height)}>
       {/* Grid lines */}
       <svg className="absolute inset-0 w-full h-full opacity-10">
         <defs><pattern id="mg" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1"/></pattern></defs>
@@ -148,7 +147,7 @@ function MapView({ listings, selectedId, onSelect, height = 'h-56' }: {
       </svg>
 
       {/* Location label */}
-      <div className="absolute top-2 left-2 bg-white/90 dark:bg-slate-900/90 rounded-lg px-2 py-1 text-[11px] font-medium text-slate-600 dark:text-slate-400 shadow border border-slate-200 dark:border-slate-700 z-20">
+      <div className="absolute top-2 left-2 bg-zinc-900/90 rounded-lg px-2 py-1 text-[11px] font-medium text-slate-600 dark:text-slate-400 shadow border border-zinc-700 z-20">
         San Francisco, CA
       </div>
 
@@ -176,7 +175,7 @@ function MapView({ listings, selectedId, onSelect, height = 'h-56' }: {
             <div className={cn('w-1.5 h-1.5 rounded-full mx-auto -mt-px', isSel ? 'bg-red-500' : 'bg-blue-500')} />
 
             {/* Hover tooltip */}
-            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none w-36 bg-slate-900 text-white text-[10px] rounded-lg p-2 shadow-xl z-40">
+            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none w-36 bg-zinc-800 text-white text-[10px] rounded-lg p-2 shadow-xl z-40">
               <p className="font-semibold leading-tight">{l.title}</p>
               <p className="text-slate-300 mt-0.5">{l.neighborhood}</p>
               <div className="flex items-center gap-1 mt-1">
@@ -189,7 +188,7 @@ function MapView({ listings, selectedId, onSelect, height = 'h-56' }: {
       })}
 
       {/* Legend */}
-      <div className="absolute bottom-2 right-2 bg-white/95 dark:bg-slate-900/95 rounded-lg p-2 shadow-md border border-slate-200 dark:border-slate-700 space-y-1 z-20">
+      <div className="absolute bottom-2 right-2 bg-zinc-900/95 rounded-lg p-2 shadow-md border border-zinc-700 space-y-1 z-20">
         <div className="flex items-center gap-1.5 text-[10px] text-slate-600 dark:text-slate-400">
           <div className="w-2.5 h-2.5 rounded-full bg-red-500 ring-1 ring-red-300"/>
           Viewing
@@ -247,7 +246,7 @@ function NegotiationHistory({ listingId }: { listingId: string }) {
           </div>
           <div className="flex gap-1 shrink-0">
             <button className="px-2 py-1 bg-emerald-500 text-white text-[10px] font-semibold rounded">Accept</button>
-            <button className="px-2 py-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-semibold rounded">Decline</button>
+            <button className="px-2 py-1 bg-zinc-700 text-zinc-300 text-[10px] font-semibold rounded">Decline</button>
           </div>
         </div>
       )}
@@ -262,7 +261,7 @@ function NegotiationHistory({ listingId }: { listingId: string }) {
             </div>
             <div className={cn('flex-1 max-w-[80%] px-3 py-2 rounded-xl text-xs leading-relaxed',
               m.sender === 'landlord'
-                ? 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-tr-sm'
+                ? 'bg-zinc-700 text-slate-700 dark:text-slate-300 rounded-tr-sm'
                 : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-900 dark:text-indigo-100 rounded-tl-sm')}>
               {m.text}
               <div className="text-[9px] text-slate-400 mt-1">{m.time}</div>
@@ -277,7 +276,7 @@ function NegotiationHistory({ listingId }: { listingId: string }) {
           value={reply}
           onChange={e => setReply(e.target.value)}
           placeholder="Send a message..."
-          className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-zinc-700 bg-zinc-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
         <button className="p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
           <Send size={13} />
@@ -332,7 +331,7 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Module manager toolbar */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 dark:border-slate-700 shrink-0 bg-white dark:bg-slate-900">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-zinc-700 shrink-0 bg-zinc-900">
         <div className="flex items-center gap-2">
           <LayoutGrid size={14} className="text-slate-400" />
           <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Dashboard</span>
@@ -345,19 +344,19 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
             className={cn(
               'flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-colors',
               hiddenModules.length === 0
-                ? 'opacity-40 cursor-not-allowed border-slate-200 dark:border-slate-700 text-slate-400'
+                ? 'opacity-40 cursor-not-allowed border-zinc-700 text-slate-400'
                 : 'border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20'
             )}
           >
             <Plus size={11} /> Add module
           </button>
           {addMenuOpen && hiddenModules.length > 0 && (
-            <div className="absolute right-0 top-8 w-44 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-20 overflow-hidden">
+            <div className="absolute right-0 top-8 w-44 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-20 overflow-hidden">
               {hiddenModules.map(m => (
                 <button
                   key={m.key}
                   onClick={() => { addDashboardModule(m.key); setAddMenuOpen(false) }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-zinc-700 transition-colors"
                 >
                   <span>{m.emoji}</span>{m.label}
                 </button>
@@ -381,7 +380,6 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
             width={containerWidth}
             gridConfig={{ cols: 12, rowHeight: 30, margin: [8, 8] as [number, number], containerPadding: [8, 8] as [number, number] }}
             dragConfig={{ handle: '.drag-handle' }}
-            compactor={noCompactor}
             onLayoutChange={(newLayout: Layout) =>
               setLayout(prev => {
                 const updated = new Map(Array.from(newLayout).map(l => [l.i, l]))
@@ -392,10 +390,10 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
             {visibleModules.map(({ key, label, emoji }) => (
               <div
                 key={key}
-                className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col"
+                className="bg-zinc-900 rounded-xl border border-zinc-700 overflow-hidden flex flex-col"
               >
                 {/* Drag handle header */}
-                <div className="drag-handle flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-700 cursor-grab active:cursor-grabbing shrink-0 select-none">
+                <div className="drag-handle flex items-center justify-between px-3 py-2 bg-zinc-800/60 border-b border-zinc-700 cursor-grab active:cursor-grabbing shrink-0 select-none">
                   <div className="flex items-center gap-1.5">
                     <span className="text-slate-400 dark:text-slate-500 text-xs leading-none">⠿</span>
                     <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{emoji} {label}</span>
@@ -415,7 +413,7 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
               {key === 'info' && (
                 <div className="space-y-3">
                   {/* ── Image carousel (top of info) ── */}
-                  <div className="relative w-full h-52 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-700 shrink-0">
+                  <div className="relative w-full h-52 rounded-xl overflow-hidden bg-zinc-700 shrink-0">
                     <img
                       src={listing.images[imageIdx]}
                       alt={listing.title}
@@ -471,7 +469,7 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
                       { label: 'Sqft', value: listing.sqft.toLocaleString() },
                       { label: 'Commute', value: `${listing.commuteTime}m` },
                     ].map(({ label, value }) => (
-                      <div key={label} className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-2 text-center">
+                      <div key={label} className="bg-zinc-800/50 rounded-lg p-2 text-center">
                         <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">{value}</div>
                         <div className="text-[10px] text-slate-400">{label}</div>
                       </div>
@@ -489,7 +487,7 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
                       { label: 'Laundry', value: listing.laundry },
                       { label: 'Parking', value: listing.parking ? 'Included' : 'Not included' },
                     ].map(({ label, value }) => (
-                      <div key={label} className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-700/50 text-xs">
+                      <div key={label} className="flex justify-between py-1 border-b border-zinc-700/50 text-xs">
                         <span className="text-slate-500">{label}</span>
                         <span className="font-medium text-slate-800 dark:text-slate-200">{value}</span>
                       </div>
@@ -566,7 +564,7 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
                   </div>
 
                   {/* Price trend */}
-                  <div className="bg-slate-50 dark:bg-slate-700/50 rounded-xl p-3">
+                  <div className="bg-zinc-800/50 rounded-xl p-3">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Rent trend (6 mo)</span>
                       {listing.priceTrend[listing.priceTrend.length - 1] < listing.priceTrend[0]
@@ -582,7 +580,7 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
                         return (
                           <div key={i} className="flex-1 flex flex-col justify-end gap-0.5">
                             <div
-                              className={cn('w-full rounded-sm', i === listing.priceTrend.length - 1 ? 'bg-indigo-400' : 'bg-slate-300 dark:bg-slate-600')}
+                              className={cn('w-full rounded-sm', i === listing.priceTrend.length - 1 ? 'bg-indigo-400' : 'bg-zinc-600')}
                               style={{ height: `${Math.max(12, h)}%` }}
                             />
                             <span className="text-[8px] text-slate-400 text-center">{['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'][i]}</span>
@@ -601,7 +599,7 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
                         return (
                           <div key={poi.name} className="flex items-center justify-between text-xs">
                             <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                              <div className="w-6 h-6 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center shrink-0">
+                              <div className="w-6 h-6 rounded-lg bg-zinc-700 flex items-center justify-center shrink-0">
                                 <Icon size={11} className="text-slate-400" />
                               </div>
                               {poi.name}
@@ -628,11 +626,11 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
 }
 
 /* ─────────────────────────────────────────
-   Main PanelMatch
+   Main Match
 ───────────────────────────────────────── */
 type SortOrder = 'price-asc' | 'price-desc'
 
-export function PanelMatch() {
+export function Match() {
   const {
     listings, selectedListingId, setSelectedListing,
     negStatusFilter, setNegStatusFilter,
@@ -653,7 +651,7 @@ export function PanelMatch() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* ── Status filter tabs ── */}
-      <div className="flex items-center gap-1 px-4 py-2.5 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shrink-0">
+      <div className="flex items-center gap-1 px-4 py-2.5 border-b border-zinc-700 bg-zinc-900 shrink-0">
         {STATUS_FILTERS.map(({ key, label }) => {
           const count = key === 'all'
             ? listings.length
@@ -666,7 +664,7 @@ export function PanelMatch() {
                 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
                 negStatusFilter === key
                   ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-zinc-800'
               )}
             >
               {label}
@@ -674,7 +672,7 @@ export function PanelMatch() {
                 'text-[10px] px-1.5 py-0.5 rounded-full font-bold',
                 negStatusFilter === key
                   ? 'bg-white/25 text-white'
-                  : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
+                  : 'bg-zinc-700 text-slate-500 dark:text-slate-400'
               )}>
                 {count}
               </span>
@@ -689,13 +687,13 @@ export function PanelMatch() {
       <div className="flex flex-1 overflow-hidden">
         {/* LEFT: collapsible list sidebar */}
         <aside className={cn(
-          'flex flex-col border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 transition-all duration-300 shrink-0 overflow-hidden',
+          'flex flex-col border-r border-zinc-700 bg-zinc-900 transition-all duration-300 shrink-0 overflow-hidden',
           listSidebarOpen ? 'w-72' : 'w-0'
         )}>
           {listSidebarOpen && (
             <>
               {/* Sidebar header */}
-              <div className="flex items-center justify-between px-3 py-2.5 border-b border-slate-200 dark:border-slate-700 shrink-0">
+              <div className="flex items-center justify-between px-3 py-2.5 border-b border-zinc-700 shrink-0">
                 <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   Apartments
                 </span>
@@ -703,7 +701,7 @@ export function PanelMatch() {
                   {/* Price sort toggle */}
                   <button
                     onClick={() => setSortOrder(o => o === 'price-asc' ? 'price-desc' : 'price-asc')}
-                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium text-slate-500 dark:text-slate-400 hover:bg-zinc-800 transition-colors"
                     title="Sort by price"
                   >
                     <ArrowUpDown size={11} />
@@ -711,7 +709,7 @@ export function PanelMatch() {
                   </button>
                   <button
                     onClick={toggleListSidebar}
-                    className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-zinc-800 transition-colors"
                   >
                     <PanelLeftClose size={15} />
                   </button>
@@ -742,7 +740,7 @@ export function PanelMatch() {
         {!listSidebarOpen && (
           <button
             onClick={toggleListSidebar}
-            className="flex flex-col items-center justify-center w-8 border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 gap-1"
+            className="flex flex-col items-center justify-center w-8 border-r border-zinc-700 bg-zinc-900 hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-200 gap-1"
           >
             <PanelLeftOpen size={14} />
             <span className="text-[9px] writing-mode-vertical font-medium tracking-wide"
@@ -753,7 +751,7 @@ export function PanelMatch() {
         )}
 
         {/* RIGHT: modular detail dashboard */}
-        <div className="flex-1 overflow-hidden bg-slate-50 dark:bg-slate-900">
+        <div className="flex-1 overflow-hidden bg-zinc-950">
           {selectedListing ? (
             <DetailDashboard listing={selectedListing} filteredListings={filtered} />
           ) : (

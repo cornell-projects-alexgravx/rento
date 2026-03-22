@@ -10,11 +10,11 @@ const buttonVariants = cva(
         default:
           'bg-indigo-600 text-white hover:bg-indigo-700 active:bg-indigo-800 shadow-sm',
         secondary:
-          'bg-slate-100 text-slate-800 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600',
+          'bg-zinc-700 text-zinc-100 hover:bg-zinc-600',
         outline:
-          'border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700',
+          'border border-zinc-700 bg-zinc-900 text-zinc-200 hover:bg-zinc-800',
         ghost:
-          'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800',
+          'text-zinc-300 hover:bg-zinc-800',
         destructive:
           'bg-red-500 text-white hover:bg-red-600 shadow-sm',
         success:
