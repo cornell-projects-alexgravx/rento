@@ -225,7 +225,7 @@ function NegotiationHistory({ listingId }: { listingId: string }) {
   if (messages.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center">
-        <MessageSquare size={28} className="text-[#9A9A9A] dark:text-slate-600 mb-2" />
+        <MessageSquare size={28} className="text-[#9A9A9A] mb-2" />
         <p className="text-sm text-[#6B6B6B] dark:text-yellow-400/60">No negotiation started yet</p>
         <button className="mt-3 flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 transition-colors">
           <Plus size={13} /> Start negotiation
@@ -370,7 +370,7 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
       <div ref={containerRef} className="flex-1 overflow-y-auto scrollbar-thin">
         {visibleModules.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center h-full">
-            <LayoutGrid size={32} className="text-[#9A9A9A] dark:text-slate-600 mb-3" />
+            <LayoutGrid size={32} className="text-[#9A9A9A] mb-3" />
             <p className="text-sm text-[#6B6B6B] dark:text-yellow-400/60 font-medium">All modules removed</p>
             <p className="text-xs text-[#6B6B6B] mt-1">Click "Add module" above to restore</p>
           </div>
@@ -395,13 +395,13 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
                 {/* Drag handle header */}
                 <div className="drag-handle flex items-center justify-between px-3 py-2 bg-[#F0F0F1]/60 dark:bg-[#1A1A1A]/60 border-b border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] cursor-grab active:cursor-grabbing shrink-0 select-none">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[#6B6B6B] dark:text-slate-500 text-xs leading-none">⠿</span>
+                    <span className="text-[#6B6B6B] text-xs leading-none">⠿</span>
                     <span className="text-xs font-medium text-[#4A4A4A] dark:text-yellow-400/60">{emoji} {label}</span>
                   </div>
                   <button
                     onMouseDown={e => e.stopPropagation()}
                     onClick={() => removeDashboardModule(key)}
-                    className="p-0.5 text-[#9A9A9A] hover:text-[#4A4A4A] dark:hover:text-slate-400 transition-colors rounded"
+                    className="p-0.5 text-[#9A9A9A] hover:text-[#4A4A4A] transition-colors rounded"
                   >
                     <X size={13} />
                   </button>
@@ -558,7 +558,7 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
                       <div key={label} className={cn('rounded-xl p-3 text-center', bg)}>
                         <Icon size={14} className={cn('mx-auto mb-1', color)} />
                         <div className={cn('text-base font-bold', color)}>{value}</div>
-                        <div className="text-[10px] text-slate-400">{label} score</div>
+                        <div className="text-[10px] text-[#6B6B6B]">{label} score</div>
                       </div>
                     ))}
                   </div>

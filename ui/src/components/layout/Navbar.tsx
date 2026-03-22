@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
 import {
   Bell, ChevronDown, Moon, Sun, LogOut,
-  Zap, Home, Settings,
+  Zap, Settings,
 } from 'lucide-react'
+import rentoLogo from '../../assets/image/rento_logo.png'
 import { useStore } from '../../store/useStore'
 import { Button } from '../ui/button'
 import { cn } from '../../lib/utils'
@@ -38,11 +39,9 @@ export function Navbar() {
         className="flex items-center gap-2 cursor-pointer shrink-0"
         onClick={() => navigate('/dashboard')}
       >
-        <div className="w-7 h-7 rounded-md bg-indigo-600 flex items-center justify-center">
-          <Home size={15} className="text-white" />
-        </div>
+        <img src={rentoLogo} alt="Rento" style={{ height: 28 }} />
         <span className="font-bold text-base text-[#010205] dark:text-white tracking-tight" style={{ fontFamily: "'Sakana', sans-serif" }}>
-          RentAgent<span className="text-indigo-400"> AI</span>
+          Rento
         </span>
       </div>
 

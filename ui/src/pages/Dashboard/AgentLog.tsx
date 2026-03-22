@@ -120,9 +120,9 @@ function StageHeader({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <span className={cn('text-[10px] font-bold', palette.text)}>STEP {step}</span>
-            <span className="font-semibold text-sm text-slate-800 dark:text-slate-100">{label}</span>
+            <span className="font-semibold text-sm text-[#010205] dark:text-white">{label}</span>
           </div>
-          <p className="text-[10px] text-slate-400 leading-none mt-0.5">{sub}</p>
+          <p className="text-[10px] text-[#6B6B6B] leading-none mt-0.5">{sub}</p>
         </div>
         <div className={cn('shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold', palette.badge)}>
           {statValue}
@@ -137,7 +137,7 @@ function StageHeader({
    Shared: log timestamp
 ───────────────────────────────────────── */
 function Ts({ v }: { v: string }) {
-  return <span className="text-[9px] text-slate-400 font-mono shrink-0 mt-px">{v.slice(0, 5)}</span>
+  return <span className="text-[9px] text-[#6B6B6B] font-mono shrink-0 mt-px">{v.slice(0, 5)}</span>
 }
 
 /* ─────────────────────────────────────────
@@ -157,7 +157,7 @@ function SearchStage() {
           <p className="text-[10px] font-semibold text-[#6B6B6B] uppercase tracking-wider mb-2">Data Coverage</p>
           <div className="grid grid-cols-2 gap-2">
             {[
-              { label: 'Scanned', value: '1,240', sub: 'active listings', color: 'text-indigo-600 dark:text-indigo-400' },
+              { label: 'Scanned', value: '1,240', sub: 'active listings', color: 'text-indigo-600 dark:text-yellow-400' },
               { label: 'New today', value: '+38', sub: 'since last scan', color: 'text-emerald-600 dark:text-emerald-400' },
               { label: 'Updated', value: '91', sub: 'price changes', color: 'text-amber-600 dark:text-amber-400' },
               { label: 'Removed', value: '14', sub: 'no longer listed', color: 'text-red-500' },
@@ -172,33 +172,33 @@ function SearchStage() {
         </div>
 
         {/* Sources */}
-        <div className="bg-zinc-900 rounded-xl border border-zinc-700 p-3">
+        <div className="bg-white dark:bg-[#0F0F0F] rounded-xl border border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] p-3">
           <div className="flex items-center gap-1.5 mb-2">
-            <Globe size={11} className="text-slate-400" />
-            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Sources</p>
+            <Globe size={11} className="text-[#6B6B6B]" />
+            <p className="text-[10px] font-semibold text-[#6B6B6B] uppercase tracking-wider">Sources</p>
           </div>
           <div className="space-y-1.5">
             {SOURCES.map(s => (
               <div key={s.name} className="flex items-center gap-2">
                 <span className="text-sm">{s.icon}</span>
-                <span className="flex-1 text-xs text-slate-700 dark:text-slate-300 font-medium">{s.name}</span>
+                <span className="flex-1 text-xs text-[#1A1A1F] dark:text-yellow-400/70 font-medium">{s.name}</span>
                 <span className={cn(
                   'text-[9px] px-1.5 py-0.5 rounded-full font-medium',
-                  s.type === 'API' ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400' : 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
+                  s.type === 'API' ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-yellow-400' : 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
                 )}>{s.type}</span>
-                <span className="text-[10px] text-slate-400 w-10 text-right">{s.count}</span>
+                <span className="text-[10px] text-[#6B6B6B] w-10 text-right">{s.count}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Image Analysis Agent Log */}
-        <div className="bg-zinc-900 rounded-xl border border-zinc-700 overflow-hidden">
-          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-zinc-700 bg-zinc-800/60">
+        <div className="bg-white dark:bg-[#0F0F0F] rounded-xl border border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] overflow-hidden">
+          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] bg-[#F0F0F1]/60 dark:bg-[#1A1A1A]/60">
             <Image size={11} className="text-indigo-500" />
-            <p className="text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Image Analysis Agent</p>
+            <p className="text-[10px] font-semibold text-[#4A4A4A] dark:text-yellow-400/60 uppercase tracking-wider">Image Analysis Agent</p>
           </div>
-          <div className="divide-y divide-zinc-700">
+          <div className="divide-y divide-[rgba(1,2,5,0.08)] dark:divide-[rgba(255,215,0,0.08)]">
             {IMAGE_LOGS.map(log => (
               <div key={log.id} className="px-3 py-2">
                 <div className="flex items-start gap-1.5 mb-1">
@@ -207,11 +207,11 @@ function SearchStage() {
                     ? <CheckCircle2 size={10} className="text-emerald-500 mt-0.5 shrink-0" />
                     : <Clock size={10} className="text-amber-400 mt-0.5 shrink-0 animate-pulse" />
                   }
-                  <span className="text-[10px] text-slate-600 dark:text-slate-400 leading-tight font-medium">{log.apt}</span>
+                  <span className="text-[10px] text-[#4A4A4A] dark:text-yellow-400/60 leading-tight font-medium">{log.apt}</span>
                 </div>
                 <div className="flex flex-wrap gap-1 pl-8">
                   {log.tags.map(tag => (
-                    <span key={tag} className="text-[9px] px-1.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-medium">{tag}</span>
+                    <span key={tag} className="text-[9px] px-1.5 py-0.5 rounded-full bg-indigo-50 dark:bg-yellow-400/10 text-indigo-600 dark:text-yellow-400 font-medium">{tag}</span>
                   ))}
                   {!log.done && <span className="text-[9px] text-amber-500 animate-pulse">analyzing…</span>}
                 </div>
@@ -238,10 +238,10 @@ function FilteringStage() {
       <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-3">
 
         {/* Preference status */}
-        <div className="bg-zinc-900 rounded-xl border border-zinc-700 p-3">
+        <div className="bg-white dark:bg-[#0F0F0F] rounded-xl border border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] p-3">
           <div className="flex items-start gap-1.5 mb-2.5">
             <Sparkles size={11} className="text-sky-500 mt-0.5 shrink-0" />
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed italic">
+            <p className="text-[10px] text-[#6B6B6B] dark:text-yellow-400/60 leading-relaxed italic">
               Taking your preferences into consideration…
             </p>
           </div>
@@ -253,12 +253,12 @@ function FilteringStage() {
         </div>
 
         {/* Filter log */}
-        <div className="bg-zinc-900 rounded-xl border border-zinc-700 overflow-hidden">
-          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-zinc-700 bg-zinc-800/60">
+        <div className="bg-white dark:bg-[#0F0F0F] rounded-xl border border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] overflow-hidden">
+          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] bg-[#F0F0F1]/60 dark:bg-[#1A1A1A]/60">
             <Filter size={11} className="text-sky-500" />
-            <p className="text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Filtering Log</p>
+            <p className="text-[10px] font-semibold text-[#4A4A4A] dark:text-yellow-400/60 uppercase tracking-wider">Filtering Log</p>
           </div>
-          <div className="divide-y divide-zinc-700">
+          <div className="divide-y divide-[rgba(1,2,5,0.08)] dark:divide-[rgba(255,215,0,0.08)]">
             {FILTER_LOGS.map(entry => (
               <div key={entry.id} className="px-3 py-2">
                 {entry.kind === 'rule' ? (
@@ -266,11 +266,11 @@ function FilteringStage() {
                     <div className="flex items-center gap-1.5">
                       <Ts v={entry.time} />
                       <Info size={9} className="text-sky-400 shrink-0" />
-                      <span className="text-[10px] font-semibold text-slate-700 dark:text-slate-300">{entry.rule}</span>
+                      <span className="text-[10px] font-semibold text-[#1A1A1F] dark:text-yellow-400/70">{entry.rule}</span>
                     </div>
                     <div className="flex items-center gap-1 pl-8 mt-0.5">
-                      <span className="text-[9px] text-slate-400">{entry.input}</span>
-                      <ArrowRight size={8} className="text-slate-300" />
+                      <span className="text-[9px] text-[#6B6B6B]">{entry.input}</span>
+                      <ArrowRight size={8} className="text-[#9A9A9A]" />
                       <span className="text-[9px] font-bold text-sky-600 dark:text-sky-400">{entry.output}</span>
                     </div>
                   </div>
@@ -288,7 +288,7 @@ function FilteringStage() {
                       )}>
                         {entry.result === 'in' ? '✓ Selected · ' : '✗ Filtered · '}{entry.apt}
                       </span>
-                      <p className="text-[9px] text-slate-400 leading-tight mt-0.5">{entry.reason}</p>
+                      <p className="text-[9px] text-[#6B6B6B] leading-tight mt-0.5">{entry.reason}</p>
                     </div>
                   </div>
                 )}
@@ -317,38 +317,38 @@ function NegotiationStage() {
       <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-3">
 
         {/* Overview stats */}
-        <div className="bg-zinc-900 rounded-xl border border-zinc-700 p-3">
-          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Overview</p>
+        <div className="bg-white dark:bg-[#0F0F0F] rounded-xl border border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] p-3">
+          <p className="text-[10px] font-semibold text-[#6B6B6B] uppercase tracking-wider mb-2">Overview</p>
           <div className="grid grid-cols-3 gap-2">
             {[
               { label: 'Ongoing', value: '3', color: 'text-violet-600 dark:text-violet-400' },
               { label: 'Success', value: '87%', color: 'text-emerald-600 dark:text-emerald-400' },
-              { label: 'Avg. reply', value: '41m', color: 'text-slate-600 dark:text-slate-300' },
+              { label: 'Avg. reply', value: '41m', color: 'text-[#4A4A4A] dark:text-yellow-400/70' },
             ].map(({ label, value, color }) => (
-              <div key={label} className="bg-zinc-800/40 rounded-lg p-2 text-center">
+              <div key={label} className="bg-[#F0F0F1]/40 dark:bg-[#1A1A1A]/40 rounded-lg p-2 text-center">
                 <div className={cn('text-base font-bold', color)}>{value}</div>
-                <div className="text-[9px] text-slate-400">{label}</div>
+                <div className="text-[9px] text-[#6B6B6B]">{label}</div>
               </div>
             ))}
           </div>
         </div>
 
         {/* Negotiation log */}
-        <div className="bg-zinc-900 rounded-xl border border-zinc-700 overflow-hidden">
-          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-zinc-700 bg-zinc-800/60">
+        <div className="bg-white dark:bg-[#0F0F0F] rounded-xl border border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] overflow-hidden">
+          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] bg-[#F0F0F1]/60 dark:bg-[#1A1A1A]/60">
             <MessageSquare size={11} className="text-violet-500" />
-            <p className="text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Negotiation Log</p>
+            <p className="text-[10px] font-semibold text-[#4A4A4A] dark:text-yellow-400/60 uppercase tracking-wider">Negotiation Log</p>
           </div>
-          <div className="divide-y divide-zinc-700">
+          <div className="divide-y divide-[rgba(1,2,5,0.08)] dark:divide-[rgba(255,215,0,0.08)]">
             {NEG_LOGS.map(entry => (
               <div key={entry.id} className="p-3 space-y-1.5">
                 {/* Header */}
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <Ts v={entry.time} />
-                  <Building2 size={9} className="text-slate-400 shrink-0" />
-                  <span className="text-[10px] font-semibold text-slate-700 dark:text-slate-300 leading-tight">{entry.apt}</span>
+                  <Building2 size={9} className="text-[#6B6B6B] shrink-0" />
+                  <span className="text-[10px] font-semibold text-[#1A1A1F] dark:text-yellow-400/70 leading-tight">{entry.apt}</span>
                 </div>
-                <div className="text-[9px] text-slate-400">Landlord: {entry.landlord}</div>
+                <div className="text-[9px] text-[#6B6B6B]">Landlord: {entry.landlord}</div>
 
                 {/* Thinking (collapsible) */}
                 {entry.thinking && (
@@ -371,7 +371,7 @@ function NegotiationStage() {
                   'rounded-xl px-2.5 py-2 text-[10px] leading-relaxed',
                   entry.type === 'sent'
                     ? 'bg-violet-50 dark:bg-violet-900/30 text-violet-900 dark:text-violet-100 rounded-tl-sm'
-                    : 'bg-zinc-700 text-zinc-300 rounded-tr-sm'
+                    : 'bg-[#E2E2E3] text-[#4A4A4A] dark:bg-[#1A1A1A] dark:text-yellow-400/70 rounded-tr-sm'
                 )}>
                   <div className="flex items-center gap-1 mb-0.5 opacity-60">
                     {entry.type === 'sent'
@@ -408,8 +408,8 @@ function NotificationStage() {
   const iconFor = (type: string) => {
     if (type === 'Landlord replies') return { icon: MessageSquare, color: 'text-violet-500', bg: 'bg-violet-50 dark:bg-violet-900/30' }
     if (type === 'Price drops') return { icon: TrendingDown, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-900/30' }
-    if (type === 'New matches') return { icon: Sparkles, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-900/30' }
-    return { icon: Bell, color: 'text-zinc-400', bg: 'bg-zinc-700' }
+    if (type === 'New matches') return { icon: Sparkles, color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-yellow-400/10' }
+    return { icon: Bell, color: 'text-[#6B6B6B]', bg: 'bg-[#E2E2E3] dark:bg-[#1A1A1A]' }
   }
 
   return (
@@ -421,30 +421,30 @@ function NotificationStage() {
       <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-3">
 
         {/* Summary pills */}
-        <div className="bg-zinc-900 rounded-xl border border-zinc-700 p-3">
-          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Summary</p>
+        <div className="bg-white dark:bg-[#0F0F0F] rounded-xl border border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] p-3">
+          <p className="text-[10px] font-semibold text-[#6B6B6B] uppercase tracking-wider mb-2">Summary</p>
           <div className="grid grid-cols-2 gap-2">
             {[
               { label: 'Delivered', value: '13', color: 'text-emerald-600 dark:text-emerald-400' },
               { label: 'Unread', value: String(notifications.filter(n => !n.read).length), color: 'text-amber-600 dark:text-amber-400' },
-              { label: 'Channels', value: '2', color: 'text-slate-600 dark:text-slate-300' },
-              { label: 'Events', value: '4', color: 'text-indigo-600 dark:text-indigo-400' },
+              { label: 'Channels', value: '2', color: 'text-[#4A4A4A] dark:text-yellow-400/70' },
+              { label: 'Events', value: '4', color: 'text-indigo-600 dark:text-yellow-400' },
             ].map(({ label, value, color }) => (
-              <div key={label} className="bg-zinc-800/40 rounded-lg p-2">
+              <div key={label} className="bg-[#F0F0F1]/40 dark:bg-[#1A1A1A]/40 rounded-lg p-2">
                 <div className={cn('text-base font-bold', color)}>{value}</div>
-                <div className="text-[9px] text-slate-400">{label}</div>
+                <div className="text-[9px] text-[#6B6B6B]">{label}</div>
               </div>
             ))}
           </div>
         </div>
 
         {/* Notification list */}
-        <div className="bg-zinc-900 rounded-xl border border-zinc-700 overflow-hidden">
-          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-zinc-700 bg-zinc-800/60">
+        <div className="bg-white dark:bg-[#0F0F0F] rounded-xl border border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] overflow-hidden">
+          <div className="flex items-center gap-1.5 px-3 py-2 border-b border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] bg-[#F0F0F1]/60 dark:bg-[#1A1A1A]/60">
             <Bell size={11} className="text-amber-500" />
-            <p className="text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Notification Log</p>
+            <p className="text-[10px] font-semibold text-[#4A4A4A] dark:text-yellow-400/60 uppercase tracking-wider">Notification Log</p>
           </div>
-          <div className="divide-y divide-zinc-700">
+          <div className="divide-y divide-[rgba(1,2,5,0.08)] dark:divide-[rgba(255,215,0,0.08)]">
             {notifications.map(n => {
               const { icon: Icon, color, bg } = iconFor(n.type)
               const t = new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -455,11 +455,11 @@ function NotificationStage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-1">
-                      <p className="text-[10px] font-semibold text-slate-700 dark:text-slate-300 leading-tight">{n.title}</p>
+                      <p className="text-[10px] font-semibold text-[#1A1A1F] dark:text-yellow-400/70 leading-tight">{n.title}</p>
                       {!n.read && <span className="shrink-0 w-1.5 h-1.5 rounded-full bg-amber-500 mt-1" />}
                     </div>
-                    <p className="text-[9px] text-slate-400 mt-0.5 leading-relaxed">{n.message}</p>
-                    <p className="text-[9px] text-slate-300 dark:text-slate-600 mt-1 font-mono">{t}</p>
+                    <p className="text-[9px] text-[#6B6B6B] mt-0.5 leading-relaxed">{n.message}</p>
+                    <p className="text-[9px] text-[#9A9A9A] dark:text-slate-600 mt-1 font-mono">{t}</p>
                   </div>
                 </div>
               )
@@ -505,7 +505,7 @@ function PipelineBar({
   const effectiveRunning = runningIdx === -1 ? 1 : runningIdx
 
   return (
-    <div className="shrink-0 flex items-center justify-center gap-0 px-6 py-2 bg-zinc-900 border-b border-zinc-700">
+    <div className="shrink-0 flex items-center justify-center gap-0 px-6 py-2 bg-white dark:bg-[#0F0F0F] border-b border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)]">
       {STAGES.map((stage, i) => {
         const Icon = stage.icon
         const isRunning = i === effectiveRunning
@@ -523,7 +523,7 @@ function PipelineBar({
                   ? PALETTE[stage.color].pill + ' opacity-70'
                   : isDone
                   ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:opacity-80'
-                  : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                  : 'bg-[#F0F0F1] dark:bg-[#1A1A1A] text-[#6B6B6B] hover:bg-[#E2E2E3] dark:hover:bg-[#242424]'
               )}
             >
               {isDone && !isSelected
@@ -534,7 +534,7 @@ function PipelineBar({
               {isRunning && !isSelected && <span className="w-1.5 h-1.5 rounded-full bg-current opacity-60 animate-pulse" />}
             </button>
             {i < STAGES.length - 1 && (
-              <ArrowRight size={12} className="mx-1 text-slate-300 dark:text-slate-600" />
+              <ArrowRight size={12} className="mx-1 text-[#9A9A9A] dark:text-slate-600" />
             )}
           </div>
         )
@@ -568,16 +568,16 @@ export function AgentLog() {
     <div className="h-full flex flex-col overflow-hidden">
 
       {/* ── Agent control bar ── */}
-      <div className="shrink-0 flex items-center gap-3 px-4 py-2 bg-zinc-900 border-b border-zinc-700">
+      <div className="shrink-0 flex items-center gap-3 px-4 py-2 bg-white dark:bg-[#0F0F0F] border-b border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)]">
         <div className={cn(
           'flex items-center gap-2 flex-1 px-3 py-1.5 rounded-xl border text-xs font-medium',
           agentStatus.isRunning
             ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
-            : 'bg-zinc-800 border-zinc-700 text-zinc-400'
+            : 'bg-[#F0F0F1] dark:bg-[#1A1A1A] border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] text-[#6B6B6B]'
         )}>
           <span className={cn('w-2 h-2 rounded-full shrink-0', agentStatus.isRunning ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400')} />
           <Bot size={12} />
-          <span className={agentStatus.isRunning ? '' : 'text-slate-400'}>
+          <span className={agentStatus.isRunning ? '' : 'text-[#6B6B6B]'}>
             {agentStatus.isRunning ? 'Running' : 'Paused'}
           </span>
           <span className="ml-auto flex items-center gap-3 text-[10px] opacity-70">
@@ -604,7 +604,7 @@ export function AgentLog() {
       />
 
       {/* ── 4-column pipeline (main content) ── */}
-      <div className="flex-1 overflow-hidden grid grid-cols-4 divide-x divide-slate-200 dark:divide-slate-700">
+      <div className="flex-1 overflow-hidden grid grid-cols-4 divide-x divide-[rgba(1,2,5,0.08)] dark:divide-[rgba(255,215,0,0.08)]">
         <div className={cn('h-full overflow-hidden', colClass('search'))}><SearchStage /></div>
         <div className={cn('h-full overflow-hidden', colClass('filter'))}><FilteringStage /></div>
         <div className={cn('h-full overflow-hidden', colClass('negotiate'))}><NegotiationStage /></div>
@@ -612,24 +612,24 @@ export function AgentLog() {
       </div>
 
       {/* ── Agent config (collapsible footer) ── */}
-      <div className="shrink-0 bg-zinc-900 border-t border-zinc-700">
+      <div className="shrink-0 bg-white dark:bg-[#0F0F0F] border-t border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)]">
         <button
           onClick={() => setShowConfig(v => !v)}
-          className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-zinc-800 transition-colors"
+          className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-[#F0F0F1] dark:hover:bg-[#1A1A1A] transition-colors"
         >
           <div className="flex items-center gap-2">
-            <Settings size={13} className="text-slate-400" />
-            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Agent Configuration</span>
+            <Settings size={13} className="text-[#6B6B6B]" />
+            <span className="text-xs font-semibold text-[#1A1A1F] dark:text-yellow-400/70">Agent Configuration</span>
           </div>
-          <ChevronDown size={13} className={cn('text-slate-400 transition-transform', showConfig && 'rotate-180')} />
+          <ChevronDown size={13} className={cn('text-[#6B6B6B] transition-transform', showConfig && 'rotate-180')} />
         </button>
 
         {showConfig && (
-          <div className="px-4 pb-4 grid grid-cols-2 gap-4 border-t border-zinc-700 pt-4">
+          <div className="px-4 pb-4 grid grid-cols-2 gap-4 border-t border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] pt-4">
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs text-slate-600 dark:text-slate-400">Max follow-ups per landlord</label>
-                <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-400">{preferences.negotiation.maxFollowUps}</span>
+                <label className="text-xs text-[#4A4A4A] dark:text-yellow-400/60">Max follow-ups per landlord</label>
+                <span className="text-xs font-semibold text-indigo-600 dark:text-yellow-400">{preferences.negotiation.maxFollowUps}</span>
               </div>
               <Slider
                 min={1} max={10} step={1}
@@ -644,7 +644,7 @@ export function AgentLog() {
                 { key: 'canConfirmLeaseTerms' as const, label: 'Auto-confirm lease terms' },
               ]).map(({ key, label }) => (
                 <div key={key} className="flex items-center justify-between">
-                  <span className="text-xs text-slate-600 dark:text-slate-400">{label}</span>
+                  <span className="text-xs text-[#4A4A4A] dark:text-yellow-400/60">{label}</span>
                   <Switch
                     checked={preferences.negotiation[key]}
                     onCheckedChange={v => updateNegotiation({ [key]: v })}

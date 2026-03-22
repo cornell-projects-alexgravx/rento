@@ -194,9 +194,9 @@ const TIMEZONES = [
 type Tab = 'housing' | 'negotiation' | 'notifications'
 
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'housing', label: '🏠 House Preference' },
-  { id: 'negotiation', label: '🤝 Negotiation' },
-  { id: 'notifications', label: '🔔 Notifications' },
+  { id: 'housing', label: 'House Preference' },
+  { id: 'negotiation', label: 'Negotiation' },
+  { id: 'notifications', label: 'Notifications' },
 ]
 
 /* ══════════════════════════════════════════════
@@ -732,17 +732,13 @@ interface Props {
 export function PreferenceSetting({ activeTab, onTabChange, onBack, onNext, isFirstTab, isLastTab }: Props) {
   return (
     <>
+      {/* Heading */}
+      <h2 className="text-white text-center font-semibold text-5xl leading-[130%] tracking-[-1.44px] max-w-[700px] mx-auto mb-10">
+        Three quick steps&nbsp;— then let AI match, negotiate, and keep you posted.
+      </h2>
+
       {/* Tab pills */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 10,
-          marginBottom: 32,
-          flexWrap: 'wrap',
-        }}
-      >
+      <div className="flex items-center justify-center gap-2.5 mb-8 flex-wrap">
         {TABS.map(({ id, label }) => {
           const tabIndex = TABS.findIndex(t => t.id === id)
           const activeIndex = TABS.findIndex(t => t.id === activeTab)
@@ -752,30 +748,15 @@ export function PreferenceSetting({ activeTab, onTabChange, onBack, onNext, isFi
             <button
               key={id}
               onClick={() => (isDone ? onTabChange(id) : undefined)}
-              style={{
-                padding: '9px 22px',
-                borderRadius: 100,
-                border: isActive
-                  ? '1.5px solid transparent'
+              className={[
+                'px-[22px] py-[9px] rounded-full border-[1.5px] font-semibold text-[13px] tracking-[0.02em] transition-all duration-200',
+                isActive
+                  ? 'border-transparent text-white shadow-[0_4px_20px_rgba(106,92,255,0.35)]'
                   : isDone
-                  ? '1.5px solid rgba(255,255,255,0.35)'
-                  : '1.5px solid rgba(255,255,255,0.2)',
-                background: isActive
-                  ? 'linear-gradient(135deg, #6A5CFF 0%, #4A6CFF 40%, #8A5CFF 70%, #FFB6A3 100%)'
-                  : 'transparent',
-                color: isActive
-                  ? '#fff'
-                  : isDone
-                  ? 'rgba(255,255,255,0.65)'
-                  : 'rgba(255,255,255,0.4)',
-                fontFamily: "'Montserrat', sans-serif",
-                fontWeight: 600,
-                fontSize: 13,
-                cursor: isDone ? 'pointer' : 'default',
-                letterSpacing: '0.02em',
-                transition: 'all 0.2s ease',
-                boxShadow: isActive ? '0 4px 20px rgba(106,92,255,0.35)' : 'none',
-              }}
+                  ? 'border-white/35 text-white/65 bg-transparent cursor-pointer'
+                  : 'border-white/20 text-white/40 bg-transparent cursor-default',
+              ].join(' ')}
+              style={isActive ? { background: 'linear-gradient(135deg, #6A5CFF 0%, #4A6CFF 40%, #8A5CFF 70%, #FFB6A3 100%)' } : undefined}
             >
               {label}
             </button>
@@ -784,18 +765,7 @@ export function PreferenceSetting({ activeTab, onTabChange, onBack, onNext, isFi
       </div>
 
       {/* Glass card */}
-      <div
-        style={{
-          maxWidth: 760,
-          margin: '0 auto',
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.09)',
-          borderRadius: 20,
-          padding: '32px 36px',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-        }}
-      >
+      <div className="max-w-[760px] mx-auto bg-white/[0.04] border border-white/[0.09] rounded-[20px] px-9 py-8 backdrop-blur-xl">
         <div className="ob ob-glass">
           {activeTab === 'housing' && <HousingPanel />}
           {activeTab === 'negotiation' && <NegotiationPanel />}
@@ -804,59 +774,22 @@ export function PreferenceSetting({ activeTab, onTabChange, onBack, onNext, isFi
       </div>
 
       {/* Navigation */}
-      <div
-        style={{
-          maxWidth: 760,
-          margin: '24px auto 0',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
+      <div className="max-w-[760px] mt-6 mx-auto flex justify-between items-center">
         <button
           onClick={onBack}
           disabled={isFirstTab}
-          style={{
-            padding: '11px 28px',
-            borderRadius: 100,
-            border: '1px solid rgba(255,255,255,0.2)',
-            background: 'transparent',
-            color: 'rgba(255,255,255,0.55)',
-            fontSize: 13,
-            fontFamily: "'Montserrat', sans-serif",
-            fontWeight: 500,
-            cursor: isFirstTab ? 'default' : 'pointer',
-            opacity: isFirstTab ? 0 : 1,
-            transition: 'opacity 0.2s',
-          }}
+          className={[
+            'px-7 py-[11px] rounded-full border border-white/20 bg-transparent text-white/55 text-[13px] font-medium transition-opacity duration-200',
+            isFirstTab ? 'opacity-0 cursor-default' : 'opacity-100 cursor-pointer',
+          ].join(' ')}
         >
           ← Back
         </button>
 
         <button
           onClick={onNext}
-          style={{
-            padding: '11px 32px',
-            borderRadius: 100,
-            border: 'none',
-            background: 'linear-gradient(135deg, #6A5CFF 0%, #4A6CFF 100%)',
-            color: '#fff',
-            fontSize: 13,
-            fontFamily: "'Montserrat', sans-serif",
-            fontWeight: 700,
-            cursor: 'pointer',
-            letterSpacing: '0.02em',
-            boxShadow: '0 6px 24px rgba(106,92,255,0.4)',
-            transition: 'transform 0.15s, box-shadow 0.15s',
-          }}
-          onMouseEnter={e => {
-            (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-1px)'
-            ;(e.currentTarget as HTMLButtonElement).style.boxShadow = '0 10px 30px rgba(106,92,255,0.5)'
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLButtonElement).style.transform = ''
-            ;(e.currentTarget as HTMLButtonElement).style.boxShadow = '0 6px 24px rgba(106,92,255,0.4)'
-          }}
+          className="px-8 py-[11px] rounded-full border-0 text-white text-[13px] font-bold cursor-pointer tracking-[0.02em] shadow-[0_6px_24px_rgba(106,92,255,0.4)] transition-[transform,box-shadow] duration-150 hover:-translate-y-px hover:shadow-[0_10px_30px_rgba(106,92,255,0.5)]"
+          style={{ background: 'linear-gradient(135deg, #6A5CFF 0%, #4A6CFF 100%)' }}
         >
           {isLastTab ? 'Finish setup →' : 'Next →'}
         </button>

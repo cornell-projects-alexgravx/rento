@@ -65,23 +65,6 @@ export function OnboardingPage() {
           </div>
         ) : (
           <>
-            <h2
-              style={{
-                fontFamily: "'Montserrat', sans-serif",
-                fontSize: 48,
-                fontStyle: 'normal',
-                fontWeight: 600,
-                color: '#FFF',
-                textAlign: 'center',
-                lineHeight: '130%',
-                letterSpacing: '-1.44px',
-                margin: '0 auto 40px',
-                maxWidth: 700,
-              }}
-            >
-              Three quick steps&nbsp;— then let AI match, negotiate, and keep you posted.
-            </h2>
-
             <PreferenceSetting
               activeTab={activeTab}
               onTabChange={setActiveTab}
