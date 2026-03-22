@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { LogOut, Settings, ChevronDown } from 'lucide-react'
 import rentoLogo from '../../assets/image/rento_logo.png'
 import { useStore } from '../../store/useStore'
+import { clearToken } from '../../lib/api'
 import { cn } from '../../lib/utils'
 import { useNavigate } from 'react-router-dom'
 
@@ -9,6 +10,7 @@ export function Navbar() {
   const {
     topTab, setTopTab,
     setPrefModal,
+    userName, userEmail,
   } = useStore()
 
   const [userOpen, setUserOpen] = useState(false)
@@ -67,7 +69,7 @@ export function Navbar() {
           className="flex items-center gap-1.5"
         >
           <div className="w-9 h-9 rounded-full bg-[#6A5CFF] flex items-center justify-center text-white font-semibold text-sm shadow-lg shadow-[#6A5CFF]/30">
-            A
+            {(userName ?? 'A').charAt(0).toUpperCase()}
           </div>
           <ChevronDown size={13} className="text-white/40" />
         </button>
@@ -76,8 +78,8 @@ export function Navbar() {
           <div className="absolute right-0 top-11 w-56 bg-[#0F1428] rounded-xl shadow-xl border border-white/10 z-50 overflow-hidden">
             {/* User info */}
             <div className="px-4 py-3 border-b border-white/10">
-              <p className="text-sm font-semibold text-white">Alex Kim</p>
-              <p className="text-xs text-white/40">alex@example.com</p>
+              <p className="text-sm font-semibold text-white">{userName ?? 'Alex Kim'}</p>
+              <p className="text-xs text-white/40">{userEmail ?? 'alex@example.com'}</p>
             </div>
 
             {/* Preferences */}
@@ -103,7 +105,7 @@ export function Navbar() {
 
             <div className="border-t border-white/10 py-1">
               <button
-                onClick={() => navigate('/onboarding')}
+                onClick={() => { clearToken(); navigate('/onboarding') }}
                 className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
               >
                 <LogOut size={13} />

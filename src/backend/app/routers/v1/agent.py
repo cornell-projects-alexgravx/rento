@@ -20,6 +20,7 @@ from app.models.agent_logs import Agent1Log, Agent2Log, Agent3Log
 from app.models.match import Match
 from app.models.user import User
 from app.routers.v1.deps import get_current_user
+from app.routers.v1.tours import list_tours
 
 router = APIRouter(prefix="/agent", tags=["v1-agent"])
 
@@ -62,7 +63,8 @@ class AgentControlResponse(BaseModel):
 # Helpers
 # ---------------------------------------------------------------------------
 
-# Simple in-process toggle (no persistent state needed for demo).
+# In-process toggle — state is lost on server restart. This is intentional for
+# the hackathon demo; a production version would persist to the database.
 _agent_running: dict[str, bool] = {}
 
 
@@ -172,8 +174,9 @@ async def get_agent_status(
 
     matches_found = len(matches)
     negotiations_active = sum(1 for m in matches if m.status == "in_progress")
-    # Tours are not tracked in a separate table yet — derive from completed matches
-    tours_scheduled = 0
+    # Derive tours count from agent3 logs (same heuristic as the /tours endpoint)
+    tours = await list_tours(current_user=current_user, db=db)
+    tours_scheduled = len(tours)
 
     if running:
         if negotiations_active > 0:

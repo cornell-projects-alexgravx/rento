@@ -16,8 +16,10 @@ from sqlalchemy.orm import selectinload
 from app.database import get_db
 from app.models.apartment import Apartment
 from app.models.match import Match
+from app.models.preferences import SubjectivePreferences
 from app.models.user import User
 from app.routers.v1.deps import get_current_user
+from app.services.matching import recalculate_all_match_scores, run_objective_filter
 
 router = APIRouter(prefix="/listings", tags=["v1-listings"])
 
@@ -82,20 +84,23 @@ def _to_negotiation_status(match_status: str) -> str:
 
 
 def _to_match_type(score: float | None) -> str:
-    """Derive matchType from the match score: >= 0.85 is 'perfect', else 'flex'."""
+    """Derive matchType from the raw DB score (0.0-1.0): >= 0.22 is 'perfect', else 'flex'.
+
+    Threshold is calibrated to the current scoring model where image labels are sparse
+    (max achievable score ~0.30 without AI image analysis). Top-quartile listings are 'perfect'.
+    """
     if score is None:
         return "flex"
-    # Scores are stored as 0-1 float OR 0-100. Normalise to 0-1 for the threshold.
-    normalised = score / 100.0 if score > 1 else score
-    return "perfect" if normalised >= 0.85 else "flex"
+    return "perfect" if score >= 0.22 else "flex"
 
 
 def _build_listing(apt: Apartment, match: Match | None) -> ListingOut:
+    # match_score is stored as 0.0-1.0; the frontend adapter handles the *100 conversion.
     score = match.match_score if match else None
     return ListingOut(
         id=apt.id,
         title=apt.name,
-        address=apt.name,
+        address=f"{apt.neighborhood.name}, NYC" if apt.neighborhood else apt.name,
         neighborhood=apt.neighborhood.name if apt.neighborhood else None,
         price=apt.price,
         bedrooms=apt.bedroom_type,
@@ -171,7 +176,10 @@ async def list_listings(
     # Build listing objects
     items_all = [_build_listing(apt, match_by_apt.get(apt.id)) for apt in all_apts]
 
-    # Apply post-fetch filters
+    # NOTE: Post-fetch in-memory filtering. This works for the hackathon demo
+    # dataset but will not scale to large apartment counts. To scale, push
+    # negotiationStatus/matchType/minScore filters into the SQL query via JOINs
+    # on the Match table.
     if negotiationStatus:
         items_all = [i for i in items_all if i.negotiationStatus == negotiationStatus]
     if matchType:
@@ -194,6 +202,89 @@ async def list_listings(
     paged = items_all[offset : offset + pageSize]
 
     return PaginatedListings(items=paged, total=total, page=page, pageSize=pageSize)
+
+
+# ---------------------------------------------------------------------------
+# Run filter / scoring  (must be registered BEFORE /{listing_id} to avoid
+# FastAPI matching "run-filter" as a listing_id with GET-only 405 response)
+# ---------------------------------------------------------------------------
+
+
+class FilterResponse(BaseModel):
+    matched: int
+    message: str
+
+
+class ScoringResponse(BaseModel):
+    scored: int
+    message: str
+
+
+@router.post("/run-filter", response_model=FilterResponse)
+async def run_filter(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: AsyncSession = Depends(get_db),
+) -> FilterResponse:
+    """Run the objective filter for the current user and create Match rows.
+
+    Idempotent — safe to call repeatedly. Returns the count of newly inserted
+    Match rows. Returns 0 without raising if the user has no ObjectivePreferences
+    yet (new user flow).
+    """
+    try:
+        matched = await run_objective_filter(current_user.id, db)
+
+        # Ensure SubjectivePreferences exists so scoring can run (uses price/commute weights)
+        existing_subj = (
+            await db.execute(
+                select(SubjectivePreferences).where(SubjectivePreferences.user_id == current_user.id).limit(1)
+            )
+        ).scalar_one_or_none()
+        if not existing_subj:
+            db.add(SubjectivePreferences(
+                id=str(uuid.uuid4()),
+                user_id=current_user.id,
+                image_labels=[],
+                neighborhood_labels=[],
+            ))
+            await db.commit()
+
+        # Auto-run scoring so listings immediately show match percentages
+        try:
+            await recalculate_all_match_scores(current_user.id, db)
+        except Exception:  # noqa: BLE001
+            pass  # Scoring failure is non-fatal
+
+        return FilterResponse(matched=matched, message=f"Filter complete: {matched} new match(es) created.")
+    except ValueError:
+        # User has no ObjectivePreferences — treat as zero matches rather than an error.
+        return FilterResponse(matched=0, message="No preferences found; skipping filter.")
+    except Exception as exc:  # noqa: BLE001
+        return FilterResponse(matched=0, message=f"Filter failed: {exc}")
+
+
+@router.post("/run-scoring", response_model=ScoringResponse)
+async def run_scoring(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: AsyncSession = Depends(get_db),
+) -> ScoringResponse:
+    """Recalculate match scores for all Match rows belonging to the current user.
+
+    Returns the count of scored matches. Returns 0 without raising if the user
+    has no SubjectivePreferences or ObjectivePreferences yet.
+    """
+    try:
+        scored = await recalculate_all_match_scores(current_user.id, db)
+        return ScoringResponse(scored=scored, message=f"Scoring complete: {scored} match(es) scored.")
+    except ValueError as exc:
+        return ScoringResponse(scored=0, message=f"Scoring skipped: {exc}")
+    except Exception as exc:  # noqa: BLE001
+        return ScoringResponse(scored=0, message=f"Scoring failed: {exc}")
+
+
+# ---------------------------------------------------------------------------
+# Single listing
+# ---------------------------------------------------------------------------
 
 
 @router.get("/{listing_id}", response_model=ListingOut)

@@ -8,7 +8,7 @@ PUT  /api/v1/negotiations/:listingId/status
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
@@ -191,6 +191,7 @@ async def get_messages(
 
 class SendMessageRequest(BaseModel):
     text: str
+    role: str = "user"  # "user" | "agent" | "host"
 
 
 @router.post("/{listing_id}/messages", response_model=MessageOut, status_code=201)
@@ -211,11 +212,15 @@ async def send_message(
     if not match:
         raise HTTPException(status_code=404, detail="Negotiation not found")
 
+    _VALID_ROLES = {"user", "agent", "host"}
+    if body.role not in _VALID_ROLES:
+        raise HTTPException(status_code=400, detail=f"role must be one of {sorted(_VALID_ROLES)}")
+
     msg = Message(
         id=str(uuid.uuid4()),
         match_id=match.id,
-        type="agent",
-        timestamp=datetime.utcnow(),
+        type=body.role,
+        timestamp=datetime.now(tz=timezone.utc),
         text=body.text,
     )
     db.add(msg)

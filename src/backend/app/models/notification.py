@@ -16,5 +16,9 @@ class Notification(Base):
     content: Mapped[str] = mapped_column(Text, nullable=False)
     type: Mapped[str] = mapped_column(String, nullable=False)
     read: Mapped[bool] = mapped_column(Boolean, default=False)
+    match_id: Mapped[str | None] = mapped_column(
+        String, ForeignKey("matches.id", ondelete="SET NULL"), nullable=True
+    )
 
     user: Mapped["User"] = relationship("User", back_populates="notifications")
+    match: Mapped["Match | None"] = relationship("Match")

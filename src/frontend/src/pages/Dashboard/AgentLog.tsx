@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BedDouble, Bath, Maximize2 } from 'lucide-react'
 import bellIcon from '../../assets/image/bell.svg'
 import { useStore } from '../../store/useStore'
@@ -177,7 +177,16 @@ function StatusIcon({ status }: { status: 'success' | 'error' | 'working' }) {
 /* ─────────────────────────────────────────
    1. Searching stage
 ───────────────────────────────────────── */
-function SearchView() {
+interface ImageLogEntry {
+  id: string | number
+  time: string
+  apt: string
+  desc: string
+  tags: string[]
+  pass: boolean
+}
+
+function SearchView({ imageLogs }: { imageLogs: ImageLogEntry[] }) {
   return (
     <div className="flex gap-4 h-full">
       {/* Left: two stacked cards */}
@@ -198,7 +207,7 @@ function SearchView() {
       </div>
 
       <LogPanel title="Image Analysis Agent Log">
-        {IMAGE_LOGS.map(log => (
+        {imageLogs.map(log => (
           <div key={log.id} className="px-6 py-4 flex items-start gap-3">
             <span className="text-xs text-white/40 font-mono shrink-0 mt-1">{log.time}</span>
             <StatusIcon status={log.pass ? 'success' : 'error'} />
@@ -225,7 +234,15 @@ function SearchView() {
 /* ─────────────────────────────────────────
    2. Filtering stage
 ───────────────────────────────────────── */
-function FilterView() {
+interface FilterLogEntry {
+  id: string | number
+  time: string
+  apt: string
+  desc: string
+  pass: boolean
+}
+
+function FilterView({ filterLogs }: { filterLogs: FilterLogEntry[] }) {
   return (
     <div className="flex gap-4 h-full">
       <SideCard>
@@ -255,7 +272,7 @@ function FilterView() {
       </SideCard>
 
       <LogPanel title="Filtering Agent Log">
-        {FILTER_LOGS.map(log => (
+        {filterLogs.map(log => (
           <div key={log.id} className="px-6 py-4 flex items-start gap-3">
             <span className="text-3xl shrink-0 leading-none select-none">{log.pass ? '😊' : '😟'}</span>
             <span className="text-xs text-white/40 font-mono shrink-0 mt-1">{log.time}</span>
@@ -309,7 +326,15 @@ function NegotiateAptCard({ listing, onClick }: { listing: Listing; onClick: () 
   )
 }
 
-function NegotiateView({ listings }: { listings: Listing[] }) {
+interface NegLogEntry {
+  id: string | number
+  time: string
+  apt: string
+  thinking: string
+  message: string
+}
+
+function NegotiateView({ listings, negLogs }: { listings: Listing[]; negLogs: NegLogEntry[] }) {
   const { setSelectedListing, setTopTab } = useStore()
   const inProgress = listings.filter(l =>
     l.negotiationStatus === 'negotiating' || l.negotiationStatus === 'pending'
@@ -336,17 +361,18 @@ function NegotiateView({ listings }: { listings: Listing[] }) {
       </div>
 
       <LogPanel title="Negotiation Agent Log">
-        {NEG_LOGS.map(log => (
+        {negLogs.map(log => (
           <div key={log.id} className="px-6 py-5 space-y-3">
             <p className="text-xs text-white/50 font-mono">{log.time}</p>
             <p className="text-white/70 text-sm leading-relaxed">
               <span className="font-medium text-white">{log.apt}: </span>
               {log.thinking}
             </p>
-            {/* message bubble */}
-            <div className="rounded-2xl rounded-tl-sm px-4 py-3" style={{ backgroundColor: '#A0BCE8' }}>
-              <p className="text-black text-sm leading-relaxed">{log.message}</p>
-            </div>
+            {log.message && (
+              <div className="rounded-2xl rounded-tl-sm px-4 py-3" style={{ backgroundColor: '#A0BCE8' }}>
+                <p className="text-black text-sm leading-relaxed">{log.message}</p>
+              </div>
+            )}
           </div>
         ))}
       </LogPanel>
@@ -403,17 +429,58 @@ function NotifyView({ notifications }: { notifications: Notification[] }) {
    Main AgentLog
 ───────────────────────────────────────── */
 export function AgentLog() {
-  const { listings, notifications } = useStore()
+  const { listings, notifications, agentStatus, loadAgentLogs, loadAgentStatus } = useStore()
   const [activeStage, setActiveStage] = useState<StageId>('filter')
+
+  useEffect(() => {
+    loadAgentStatus()
+    loadAgentLogs()
+  }, [loadAgentStatus, loadAgentLogs])
+
+  // Build stage-specific log arrays from real logs, falling back to mock data
+  const realSearchLogs = agentStatus.logs.filter(l => l.phase === 'search')
+  const realFilterLogs = agentStatus.logs.filter(l => l.phase === 'filter')
+  const realNegLogs    = agentStatus.logs.filter(l => l.phase === 'negotiate' || l.phase === 'negotiation')
+
+  const searchImageLogs = realSearchLogs.length > 0
+    ? realSearchLogs.map(l => ({
+        id: l.id,
+        time: new Date(l.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        apt: l.message.split(':')[0] ?? l.message,
+        desc: l.message,
+        tags: [] as string[],
+        pass: l.level !== 'error',
+      }))
+    : IMAGE_LOGS
+
+  const filterDisplayLogs = realFilterLogs.length > 0
+    ? realFilterLogs.map(l => ({
+        id: l.id,
+        time: new Date(l.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        apt: l.message.split(':')[0] ?? l.message,
+        desc: l.message,
+        pass: l.level !== 'error',
+      }))
+    : FILTER_LOGS
+
+  const negDisplayLogs = realNegLogs.length > 0
+    ? realNegLogs.map(l => ({
+        id: l.id,
+        time: new Date(l.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        apt: l.message.split(':')[0] ?? l.message,
+        thinking: l.message,
+        message: '',
+      }))
+    : NEG_LOGS
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <Timeline active={activeStage} onSelect={setActiveStage} />
 
       <div className="flex-1 overflow-hidden px-6 pb-6 pt-4 min-h-0">
-        {activeStage === 'search'    && <SearchView />}
-        {activeStage === 'filter'    && <FilterView />}
-        {activeStage === 'negotiate' && <NegotiateView listings={listings} />}
+        {activeStage === 'search'    && <SearchView imageLogs={searchImageLogs} />}
+        {activeStage === 'filter'    && <FilterView filterLogs={filterDisplayLogs} />}
+        {activeStage === 'negotiate' && <NegotiateView listings={listings} negLogs={negDisplayLogs} />}
         {activeStage === 'notify'    && <NotifyView notifications={notifications} />}
       </div>
     </div>

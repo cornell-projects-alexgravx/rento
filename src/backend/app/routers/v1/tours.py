@@ -3,6 +3,15 @@
 Tours are not yet tracked in a dedicated table.  We derive scheduled tours
 from completed / in-progress matches by scanning agent3_logs for result JSON
 that contains scheduling signals, and fall back to an empty list cleanly.
+
+WARNING: The current implementation uses fragile keyword matching ("tour",
+"schedule", "showing") against Agent3Log.result JSON text. `scheduledAt` is
+the log timestamp, NOT the actual tour date. This is a temporary heuristic
+for the hackathon demo.
+
+TODO: Create a dedicated Tour table with columns: id, user_id, apartment_id,
+scheduled_at, status, address, notes, created_at. Replace this heuristic with
+proper CRUD operations once the Tour model is in place.
 """
 from __future__ import annotations
 

@@ -9,8 +9,10 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from sqlalchemy.orm import selectinload
 
 from app.database import get_db
 from app.models.notification import Notification
@@ -61,6 +63,8 @@ def _notif_to_out(n: Notification) -> NotificationOut:
     title = parts[0] if parts else content
     message = content
 
+    listing_id = n.match.apartment_id if n.match else None
+
     return NotificationOut(
         id=n.id,
         type=n.type,
@@ -68,7 +72,7 @@ def _notif_to_out(n: Notification) -> NotificationOut:
         message=message,
         timestamp=n.timestamp.isoformat(),
         read=n.read,
-        listingId=None,  # Notification model has no listing_id column; extend later if needed
+        listingId=listing_id,
     )
 
 
@@ -88,13 +92,13 @@ async def list_notifications(
     offset = (page - 1) * pageSize
 
     total_result = await db.execute(
-        select(Notification).where(Notification.user_id == uid)
+        select(func.count(Notification.id)).where(Notification.user_id == uid)
     )
-    all_notifs = total_result.scalars().all()
-    total = len(all_notifs)
+    total = total_result.scalar_one()
 
     paged_result = await db.execute(
         select(Notification)
+        .options(selectinload(Notification.match))
         .where(Notification.user_id == uid)
         .order_by(Notification.timestamp.desc())
         .offset(offset)

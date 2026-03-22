@@ -10,10 +10,10 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
+import bcrypt as _bcrypt
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,20 +22,18 @@ from app.database import get_db
 from app.models.user import User
 
 # ---------------------------------------------------------------------------
-# Password hashing
+# Password hashing (bcrypt directly — avoids passlib>=4.0 compat issue)
 # ---------------------------------------------------------------------------
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 bearer_scheme = HTTPBearer()
 
 
 def hash_password(plain: str) -> str:
-    return pwd_context.hash(plain)
+    return _bcrypt.hashpw(plain.encode("utf-8"), _bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    return _bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
 
 
 # ---------------------------------------------------------------------------

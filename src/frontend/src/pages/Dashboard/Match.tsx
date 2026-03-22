@@ -27,6 +27,8 @@ L.Icon.Default.mergeOptions({ iconUrl: markerIcon, iconRetinaUrl: markerIcon2x, 
 import { useStore } from '../../store/useStore'
 import type { Listing } from '../../types'
 import { cn, formatCurrency } from '../../lib/utils'
+import { listingsApi, negotiationsApi } from '../../lib/api'
+import type { MessageOut } from '../../lib/api'
 
 /* ─────────────────────────────────────────
    Types
@@ -47,34 +49,55 @@ function negStatusOf(l: Listing): NegStatusFilter {
 }
 
 /* ─────────────────────────────────────────
-   Mock negotiation messages
-───────────────────────────────────────── */
-const mockMessages: Record<string, { sender: 'agent' | 'landlord'; text: string; time: string }[]> = {
-  'lst-002': [
-    { sender: 'agent',    text: "Hi, I'm reaching out regarding this apartment. I'm very interested and would love to learn more about the lease terms and availability.", time: '08:00' },
-    { sender: 'landlord', text: "Hello, thanks for reaching out. The unit is still open, and we're scheduling tours this week.", time: '08:15' },
-    { sender: 'agent',    text: 'Could you let me know if utilities are included in the rent?', time: '08:17' },
-    { sender: 'landlord', text: 'Water and trash are included. Gas and electric are separate.', time: '08:30' },
-  ],
-  'lst-003': [
-    { sender: 'agent',    text: "Hello, reaching out about the studio at 501 Fell St. My client is very interested.", time: '07:30' },
-    { sender: 'landlord', text: "Thanks for reaching out! We just dropped the price to $1,950. Is your client flexible on move-in?", time: '08:45' },
-  ],
-}
-
-/* ─────────────────────────────────────────
-   Negotiation chat
+   Negotiation chat (real API)
 ───────────────────────────────────────── */
 function NegotiationChat({ listingId }: { listingId: string }) {
-  const messages = mockMessages[listingId] || []
+  const [messages, setMessages] = useState<MessageOut[]>([])
+  const [loading, setLoading] = useState(true)
+  const [starting, setStarting] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    negotiationsApi.messages(listingId)
+      .then((msgs) => { if (!cancelled) setMessages(msgs) })
+      .catch(() => { /* keep empty array */ })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [listingId])
+
+  async function handleStartNegotiation() {
+    setStarting(true)
+    try {
+      await negotiationsApi.start(listingId)
+      const msgs = await negotiationsApi.messages(listingId)
+      setMessages(msgs)
+    } catch {
+      // ignore
+    } finally {
+      setStarting(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="w-5 h-5 border-2 border-white/20 border-t-white/70 rounded-full animate-spin" />
+      </div>
+    )
+  }
 
   if (messages.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center">
         <MessageSquare size={28} className="text-white/30 mb-2" />
         <p className="text-sm text-white/50">No negotiation started yet</p>
-        <button className="mt-3 flex items-center gap-1.5 px-4 py-2 bg-[#6A5CFF] text-white text-xs font-medium rounded-lg hover:bg-[#5a4def] transition-colors">
-          <Plus size={13} /> Start negotiation
+        <button
+          onClick={handleStartNegotiation}
+          disabled={starting}
+          className="mt-3 flex items-center gap-1.5 px-4 py-2 bg-[#6A5CFF] text-white text-xs font-medium rounded-lg hover:bg-[#5a4def] transition-colors disabled:opacity-50"
+        >
+          <Plus size={13} /> {starting ? 'Starting...' : 'Start negotiation'}
         </button>
       </div>
     )
@@ -82,19 +105,22 @@ function NegotiationChat({ listingId }: { listingId: string }) {
 
   return (
     <div className="space-y-3">
-      {messages.map((m, i) => (
-        <div key={i} className={cn('flex', m.sender === 'agent' ? 'justify-end' : 'justify-start')}>
-          <div className={cn(
-            'max-w-[70%] px-4 py-3 rounded-2xl text-sm leading-relaxed',
-            m.sender === 'agent'
-              ? 'bg-white text-gray-900 rounded-br-sm'
-              : 'bg-[#A0BCE8]/40 text-white rounded-bl-sm'
-          )}>
-            {m.text}
-            <div className="text-[10px] opacity-50 mt-1 text-right">{m.time}</div>
+      {messages.map((m) => {
+        const time = new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        return (
+          <div key={m.id} className={cn('flex', m.role === 'agent' ? 'justify-end' : 'justify-start')}>
+            <div className={cn(
+              'max-w-[70%] px-4 py-3 rounded-2xl text-sm leading-relaxed',
+              m.role === 'agent'
+                ? 'bg-white text-gray-900 rounded-br-sm'
+                : 'bg-[#A0BCE8]/40 text-white rounded-bl-sm'
+            )}>
+              {m.text}
+              <div className="text-[10px] opacity-50 mt-1 text-right">{time}</div>
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
@@ -105,7 +131,17 @@ function NegotiationChat({ listingId }: { listingId: string }) {
 function GridCard({ listing, selected, onClick }: {
   listing: Listing; selected: boolean; onClick: () => void
 }) {
-  const bedNum = listing.bedrooms.replace(/\D/g, '')
+  const bedLabel = listing.bedrooms === 'Studio' ? 'Studio' : `${listing.bedrooms.replace(/\D/g, '')} beds`
+
+  async function handleReact(action: 'like' | 'dislike', e: React.MouseEvent) {
+    e.stopPropagation()
+    try {
+      await listingsApi.react(listing.id, action)
+    } catch {
+      // ignore
+    }
+  }
+
   return (
     <div
       onClick={onClick}
@@ -122,10 +158,10 @@ function GridCard({ listing, selected, onClick }: {
           onError={e => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${listing.id}/400/200` }}
         />
         <div className="absolute top-3 right-3 flex gap-2">
-          <button onClick={e => e.stopPropagation()} className="flex items-center justify-center">
+          <button onClick={(e) => handleReact('like', e)} className="flex items-center justify-center">
             <img src={likeIcon} alt="like" className="w-7 h-7 object-contain" />
           </button>
-          <button onClick={e => e.stopPropagation()} className="flex items-center justify-center">
+          <button onClick={(e) => handleReact('dislike', e)} className="flex items-center justify-center">
             <img src={dislikeIcon} alt="dislike" className="w-7 h-7 object-contain" />
           </button>
         </div>
@@ -136,7 +172,7 @@ function GridCard({ listing, selected, onClick }: {
         <p className="text-[#6A5CFF] font-bold text-xl mt-2">{formatCurrency(listing.price)}</p>
         <div className="border-t border-gray-100 mt-3 pt-3 flex items-center gap-1.5 text-[11px] text-gray-500">
           <BedDouble size={12} className="text-gray-400 shrink-0" />
-          <span>{bedNum} beds</span>
+          <span>{bedLabel}</span>
           <span className="text-gray-200 px-0.5">|</span>
           <Bath size={12} className="text-gray-400 shrink-0" />
           <span>{listing.bathrooms} baths</span>
@@ -155,7 +191,17 @@ function GridCard({ listing, selected, onClick }: {
 function ListCard({ listing, selected, onClick }: {
   listing: Listing; selected: boolean; onClick: () => void
 }) {
-  const bedNum = listing.bedrooms.replace(/\D/g, '')
+  const bedLabel = listing.bedrooms === 'Studio' ? 'Studio' : `${listing.bedrooms.replace(/\D/g, '')} beds`
+
+  async function handleReact(action: 'like' | 'dislike', e: React.MouseEvent) {
+    e.stopPropagation()
+    try {
+      await listingsApi.react(listing.id, action)
+    } catch {
+      // ignore
+    }
+  }
+
   return (
     <div
       onClick={onClick}
@@ -172,10 +218,10 @@ function ListCard({ listing, selected, onClick }: {
           onError={e => { (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${listing.id}/300/200` }}
         />
         <div className="absolute top-2 right-2 flex gap-1.5">
-          <button onClick={e => e.stopPropagation()}>
+          <button onClick={(e) => handleReact('like', e)}>
             <img src={likeIcon} alt="like" className="w-5 h-5 object-contain" />
           </button>
-          <button onClick={e => e.stopPropagation()}>
+          <button onClick={(e) => handleReact('dislike', e)}>
             <img src={dislikeIcon} alt="dislike" className="w-5 h-5 object-contain" />
           </button>
         </div>
@@ -185,7 +231,7 @@ function ListCard({ listing, selected, onClick }: {
         <p className="text-gray-400 text-[11px] mt-0.5">{listing.address}</p>
         <p className="text-[#6A5CFF] font-bold text-base mt-1">{formatCurrency(listing.price)}</p>
         <div className="border-t border-gray-100 mt-2 pt-2 flex items-center gap-1 text-[10px] text-gray-400">
-          <BedDouble size={10} className="shrink-0" /><span>{bedNum} beds</span>
+          <BedDouble size={10} className="shrink-0" /><span>{bedLabel}</span>
           <span className="text-gray-200 px-0.5">|</span>
           <Bath size={10} className="shrink-0" /><span>{listing.bathrooms} baths</span>
           <span className="text-gray-200 px-0.5">|</span>
@@ -470,10 +516,15 @@ export function Match() {
   const {
     listings, selectedListingId, setSelectedListing,
     negStatusFilter, setNegStatusFilter,
+    loadListings,
   } = useStore()
 
   const [sortOrder, setSortOrder] = useState<SortOrder>('price-asc')
   const [view, setView] = useState<ViewMode>(selectedListingId ? 'split' : 'grid')
+
+  useEffect(() => {
+    loadListings()
+  }, [loadListings])
 
   const filtered = (negStatusFilter === 'all'
     ? listings

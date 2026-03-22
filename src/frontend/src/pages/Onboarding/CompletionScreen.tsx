@@ -4,10 +4,11 @@ import { formatCurrency } from '../../lib/utils'
 
 export function CompletionScreen() {
   const navigate = useNavigate()
-  const { preferences, setOnboardingComplete, setOnboardingStep } = useStore()
+  const { preferences, setOnboardingComplete, setOnboardingStep, savePreferences } = useStore()
   const { housing, negotiation, notifications } = preferences
 
-  const handleStart = () => {
+  const handleStart = async () => {
+    await savePreferences()
     setOnboardingComplete(true)
     navigate('/dashboard')
   }
