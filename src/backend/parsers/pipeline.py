@@ -57,7 +57,7 @@ async def _run_streeteasy(
     zenrows_api_key: str | None,
 ) -> tuple[int, int]:
     """Fetch → parse → scrape → write for StreetEasy. Returns (created, skipped)."""
-    from app.parsers.streeteasy_email import StreetEasyEmailParser
+    from parsers.streeteasy_email import StreetEasyEmailParser
 
     email_parser = StreetEasyEmailParser()
 
@@ -65,7 +65,7 @@ async def _run_streeteasy(
         logger.info("[StreetEasy] Offline mode — parsing local file: %s", eml_path)
         listings = email_parser.parse_eml_file(eml_path)
     else:
-        from app.parsers.gmail_fetcher import GmailFetcher
+        from parsers.gmail_fetcher import GmailFetcher
         fetcher = GmailFetcher(
             credentials_path=os.environ.get("GMAIL_CREDENTIALS_PATH", "credentials.json"),
             token_path=os.environ.get("GMAIL_TOKEN_PATH", "token.json"),
@@ -96,7 +96,7 @@ async def _run_streeteasy(
             listings = await asyncio.to_thread(scraper.enrich_batch, listings)
 
     from app.database import async_session_factory
-    from app.parsers.db_writer import ListingWriter
+    from parsers.streeteasy_db_writer import ListingWriter
     async with async_session_factory() as session:
         writer = ListingWriter(session)
         created, skipped = await writer.upsert_listings(listings)
@@ -121,7 +121,7 @@ async def _run_craigslist(
         logger.info("[Craigslist] Offline mode — parsing local file: %s", eml_path)
         listings = email_parser.parse_eml_file(eml_path)
     else:
-        from app.parsers.gmail_fetcher import GmailFetcher
+        from parsers.gmail_fetcher import GmailFetcher
         fetcher = GmailFetcher(
             credentials_path=os.environ.get("GMAIL_CREDENTIALS_PATH", "credentials.json"),
             token_path=os.environ.get("GMAIL_TOKEN_PATH", "token.json"),
