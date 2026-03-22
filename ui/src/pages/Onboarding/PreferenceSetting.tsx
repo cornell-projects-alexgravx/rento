@@ -733,7 +733,7 @@ export function PreferenceSetting({ activeTab, onTabChange, onBack, onNext, isFi
   return (
     <>
       {/* Heading */}
-      <h2 className="text-white text-center font-semibold text-5xl leading-[130%] tracking-[-1.44px] max-w-[700px] mx-auto mb-10">
+      <h2 className="text-[#010205] text-center font-semibold text-5xl leading-[130%] tracking-[-1.44px] max-w-[700px] mx-auto mb-10">
         Three quick steps&nbsp;— then let AI match, negotiate, and keep you posted.
       </h2>
 
@@ -753,8 +753,8 @@ export function PreferenceSetting({ activeTab, onTabChange, onBack, onNext, isFi
                 isActive
                   ? 'border-transparent text-white shadow-[0_4px_20px_rgba(106,92,255,0.35)]'
                   : isDone
-                  ? 'border-white/35 text-white/65 bg-transparent'
-                  : 'border-white/20 text-white/40 bg-transparent',
+                  ? 'border-[rgba(1,2,5,0.25)] text-[#4A4A4A] bg-white'
+                  : 'border-[rgba(1,2,5,0.15)] text-[#9A9A9A] bg-white',
               ].join(' ')}
               style={isActive ? { background: 'linear-gradient(135deg, #6A5CFF 0%, #4A6CFF 40%, #8A5CFF 70%, #FFB6A3 100%)' } : undefined}
             >
@@ -764,8 +764,8 @@ export function PreferenceSetting({ activeTab, onTabChange, onBack, onNext, isFi
         })}
       </div>
 
-      {/* Glass card */}
-      <div className="max-w-[760px] mx-auto bg-white/[0.04] border border-white/[0.09] rounded-[20px] px-9 py-8 backdrop-blur-xl">
+      {/* Card */}
+      <div className="max-w-[760px] mx-auto bg-[#F6F6F7] border border-[rgba(1,2,5,0.08)] rounded-[20px] px-9 py-8">
         <div className="ob ob-glass">
           {activeTab === 'housing' && <HousingPanel />}
           {activeTab === 'negotiation' && <NegotiationPanel />}
@@ -779,7 +779,7 @@ export function PreferenceSetting({ activeTab, onTabChange, onBack, onNext, isFi
           onClick={onBack}
           disabled={isFirstTab}
           className={[
-            'px-7 py-[11px] rounded-full border border-white/20 bg-transparent text-white/55 text-[13px] font-medium transition-opacity duration-200',
+            'px-7 py-[11px] rounded-full border border-[rgba(1,2,5,0.15)] bg-white text-[#6B6B6B] text-[13px] font-medium transition-opacity duration-200',
             isFirstTab ? 'opacity-0 cursor-default' : 'opacity-100 cursor-pointer',
           ].join(' ')}
         >
@@ -788,7 +788,7 @@ export function PreferenceSetting({ activeTab, onTabChange, onBack, onNext, isFi
 
         <button
           onClick={onNext}
-          className="px-8 py-[11px] rounded-full border-0 text-white text-[13px] font-bold cursor-pointer tracking-[0.02em] shadow-[0_6px_24px_rgba(106,92,255,0.4)] transition-[transform,box-shadow] duration-150 hover:-translate-y-px hover:shadow-[0_10px_30px_rgba(106,92,255,0.5)]"
+          className="px-8 py-[11px] rounded-full border-0 text-white text-[13px] font-bold cursor-pointer tracking-[0.02em] shadow-[0_4px_16px_rgba(106,92,255,0.30)] transition-[transform,box-shadow] duration-150 hover:-translate-y-px hover:shadow-[0_8px_24px_rgba(106,92,255,0.40)]"
           style={{ background: 'linear-gradient(135deg, #6A5CFF 0%, #4A6CFF 100%)' }}
         >
           {isLastTab ? 'Finish setup →' : 'Next →'}

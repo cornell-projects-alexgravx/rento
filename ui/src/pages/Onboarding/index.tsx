@@ -47,7 +47,7 @@ export function OnboardingPage() {
       <section
         id="ob-form-section"
         style={{
-          background: 'linear-gradient(160deg, #0B1627 0%, #101e38 60%, #0d1a30 100%)',
+          background: '#F6F6F7',
           padding: '72px 24px 96px',
           minHeight: '60vh',
         }}
@@ -57,12 +57,10 @@ export function OnboardingPage() {
             style={{
               maxWidth: 720,
               margin: '0 auto',
-              background: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.09)',
+              background: '#FFFFFF',
+              border: '1px solid rgba(1,2,5,0.10)',
               borderRadius: 20,
               padding: 40,
-              backdropFilter: 'blur(24px)',
-              WebkitBackdropFilter: 'blur(24px)',
             }}
           >
             <div className="ob ob-glass">
