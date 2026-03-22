@@ -1,23 +1,47 @@
 # Dependencies
 node_modules/
+# ── Secrets & credentials — NEVER commit these ────────────────────────────
+.env
+credentials.json
+token.json
+
+# ── Python ────────────────────────────────────────────────────────────────
 __pycache__/
 *.pyc
 
 # Build output
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
 dist/
+build/
+.eggs/
 
 # Environment variables
 .env
 
 # Virtual environment
 venv/
+# ── Virtual environments ──────────────────────────────────────────────────
 .venv/
+venv/
+env/
 
 # IDE
+# ── Logs ─────────────────────────────────────────────────────────────────
+*.log
+*.log.*
+
+# ── IDEs ──────────────────────────────────────────────────────────────────
+.idea/
 .vscode/
 .idea/
 
 # OS
+*.swp
+*.swo
 .DS_Store
 .solopreneur/
 
