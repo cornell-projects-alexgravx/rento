@@ -215,14 +215,26 @@ def build_agent3_graph(session: AsyncSession):
         session.add(msg)
 
         # Write an Agent3Log entry
+        is_counter = state["round_number"] > 0
+        ai_reasoning = (
+            f"Counter-offer drafted for round {state['round_number']} in response to host's previous message."
+            if is_counter
+            else f"Opening inquiry drafted for {apt['name']} at ${apt['price']}/mo."
+        )
         log = Agent3Log(
             id=str(uuid.uuid4()),
             user_id=user_id,
             apartment_id=apt["id"],
             message_id=msg.id,
             timestamp=datetime.utcnow(),
-            content=f"Round {state['round_number']}: sent email to {apt['host_email']}",
-            result=json.dumps({"status": "sent", "round": state["round_number"]}),
+            result=json.dumps({
+                "status": "sent",
+                "round": state["round_number"],
+                "contact_channel": "email",
+                "contact_address": apt["host_email"],
+                "ai_reasoning": ai_reasoning,
+                "message": state["email_draft"],
+            }),
         )
         session.add(log)
         await session.commit()
@@ -293,10 +305,32 @@ def build_agent3_graph(session: AsyncSession):
                 messages=[{"role": "user", "content": prompt}],
             )
             parsed = json.loads(response.content[0].text.strip())
+            analysis = parsed.get("analysis", "rejected")
+            summary = parsed.get("summary", "")
             new_history = list(state.get("conversation_history", []))
             new_history.append({"role": "host", "text": state["host_reply"]})
+
+            # Log the received reply and AI analysis
+            apt = state["apartment"]
+            log = Agent3Log(
+                id=str(uuid.uuid4()),
+                user_id=state["match"]["user_id"],
+                apartment_id=apt["id"],
+                timestamp=datetime.utcnow(),
+                result=json.dumps({
+                    "status": analysis,
+                    "round": state["round_number"],
+                    "contact_channel": "email",
+                    "contact_address": apt["host_email"],
+                    "ai_reasoning": summary,
+                    "message": state["host_reply"],
+                }),
+            )
+            session.add(log)
+            await session.commit()
+
             return {
-                "reply_analysis": parsed.get("analysis", "rejected"),
+                "reply_analysis": analysis,
                 "agreed_datetime": parsed.get("agreed_datetime"),
                 "conversation_history": new_history,
                 "round_number": state["round_number"] + 1,

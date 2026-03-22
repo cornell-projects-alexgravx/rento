@@ -1,7 +1,7 @@
 import uuid
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,7 +16,7 @@ router = APIRouter(tags=["matches"])
 
 
 @router.get("/matches", response_model=List[MatchRead])
-async def list_matches(skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
+async def list_matches(skip: int = Query(default=0, ge=0), limit: int = Query(default=100, ge=1, le=500), db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Match).offset(skip).limit(limit))
     return result.scalars().all()
 
@@ -60,7 +60,7 @@ async def delete_match(match_id: str, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/users/{user_id}/matches", response_model=List[MatchRead])
-async def get_user_matches(user_id: str, skip: int = 0, limit: int = 100, db: AsyncSession = Depends(get_db)):
+async def get_user_matches(user_id: str, skip: int = Query(default=0, ge=0), limit: int = Query(default=100, ge=1, le=500), db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(Match).where(Match.user_id == user_id).offset(skip).limit(limit)
     )
@@ -92,13 +92,16 @@ async def swipe(user_id: str, body: SwipeRequest, db: AsyncSession = Depends(get
 async def get_relevant_matches(
     user_id: str,
     min_score: float = 0.8,
-    skip: int = 0,
-    limit: int = 100,
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, ge=1, le=500),
     db: AsyncSession = Depends(get_db),
 ):
     stmt = (
         select(Match)
-        .where(Match.user_id == user_id, Match.match_score >= min_score)
+        .where(
+            Match.user_id == user_id,
+            Match.match_score >= min_score,
+        )
         .order_by(Match.match_score.desc())
         .offset(skip)
         .limit(limit)

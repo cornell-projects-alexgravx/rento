@@ -258,8 +258,7 @@ async def get_apartment_agent_status(
         "last_agent1_log": {
             "id": last_log.id,
             "timestamp": last_log.timestamp.isoformat(),
-            "content": json.loads(last_log.content) if last_log.content else None,
-            "labels": json.loads(last_log.result) if last_log.result else [],
+            "result": json.loads(last_log.result) if last_log.result else None,
         }
         if last_log
         else None,

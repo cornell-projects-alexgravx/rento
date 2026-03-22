@@ -16,7 +16,6 @@ class Agent1Log(Base):
     )
     source: Mapped[str | None] = mapped_column(String, nullable=True)
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
-    content: Mapped[str] = mapped_column(Text, nullable=False)
     result: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     apartment: Mapped["Apartment"] = relationship("Apartment", back_populates="agent1_logs")
@@ -30,7 +29,6 @@ class Agent2Log(Base):
         String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
-    content: Mapped[str] = mapped_column(Text, nullable=False)
     result: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     user: Mapped["User"] = relationship("User", back_populates="agent2_logs")
@@ -50,7 +48,6 @@ class Agent3Log(Base):
         String, ForeignKey("messages.id", ondelete="SET NULL"), nullable=True
     )
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
-    content: Mapped[str | None] = mapped_column(Text, nullable=True)
     result: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     user: Mapped["User"] = relationship("User", back_populates="agent3_logs")

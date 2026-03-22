@@ -123,15 +123,16 @@ def build_agent1_graph(session: AsyncSession):
             apt.image_labels = state.get("labels", [])
 
         if state.get("error"):
-            content_dict = {
+            result_dict = {
                 "status": "error",
                 "error": state.get("error"),
             }
         else:
-            content_dict = {
+            result_dict = {
                 "status": "success",
                 "labels_count": len(state.get("labels", [])),
                 "description": state.get("description", ""),
+                "labels": state.get("labels", []),
             }
 
         log = Agent1Log(
@@ -139,8 +140,7 @@ def build_agent1_graph(session: AsyncSession):
             apartment_id=state["apartment_id"],
             source="agent1_image",
             timestamp=datetime.utcnow(),
-            content=json.dumps(content_dict),
-            result=json.dumps(state.get("labels", [])),
+            result=json.dumps(result_dict),
         )
         session.add(log)
         await session.commit()

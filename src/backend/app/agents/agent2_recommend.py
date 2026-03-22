@@ -82,7 +82,7 @@ def build_agent2_graph(session: AsyncSession):
             select(Match)
             .where(Match.user_id == state["user_id"])
             .options(selectinload(Match.apartment))
-            .order_by(Match.match_score.desc().nulls_last())
+            .order_by(Match.match_score.desc().nulls_first())
             .limit(state["top_n"])
         )
         matches = result.scalars().all()
@@ -136,7 +136,7 @@ def build_agent2_graph(session: AsyncSession):
         try:
             response = await client.messages.create(
                 model=MODEL,
-                max_tokens=1024,
+                max_tokens=4096,
                 messages=[{"role": "user", "content": prompt}],
             )
             raw = response.content[0].text.strip()
@@ -164,20 +164,23 @@ def build_agent2_graph(session: AsyncSession):
                 match.match_score = round(score, 4)
                 match.match_reasoning = reasoning
 
-        result_str = json.dumps(
-            {"status": "error", "error": state.get("error")}
-            if state.get("error")
-            else {
-                "status": "success",
-                "ranked_count": len(state.get("rankings", [])),
-            }
+        rankings = state.get("rankings", [])
+        reasoning_description = "; ".join(
+            r["reasoning"] for r in rankings[:3] if r.get("reasoning")
         )
+        if state.get("error"):
+            result_dict = {"status": "error", "error": state.get("error")}
+        else:
+            result_dict = {
+                "status": "success",
+                "ranked_count": len(rankings),
+                "reasoning_description": reasoning_description,
+            }
         log = Agent2Log(
             id=str(uuid.uuid4()),
             user_id=state["user_id"],
             timestamp=datetime.utcnow(),
-            content=f"Ranked top {state['top_n']} matches",
-            result=result_str,
+            result=json.dumps(result_dict),
         )
         session.add(log)
         await session.commit()

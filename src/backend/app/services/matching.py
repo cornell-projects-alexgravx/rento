@@ -24,8 +24,8 @@ def passes_objective_filter(apartment: Apartment, prefs: ObjectivePreferences) -
     - bedroom_type: must equal prefs.bedroom_type
     - price: prefs.min_budget <= price <= prefs.max_budget
     - neighbor_id: if prefs.selected_areas non-empty, apt.neighbor_id must be in it
-    - move_in_date: if apt.move_in_date is set, it must be <= prefs.move_in_date
-    - lease_length_months: if both are set, they must be equal
+    - move_in_date: apartment must be available on or before prefs.move_in_date (skipped if either is None)
+    - lease_length_months: apartment lease must be >= prefs.lease_length_months (skipped if either is None)
     - laundry: if prefs.laundry non-empty, intersection with apt.laundry must be non-empty
     - parking: same intersection logic
     - pets: if prefs.pets is True, apt.pets must be True
@@ -40,7 +40,7 @@ def passes_objective_filter(apartment: Apartment, prefs: ObjectivePreferences) -
         if apartment.move_in_date > prefs.move_in_date:
             return False
     if apartment.lease_length_months and prefs.lease_length_months:
-        if apartment.lease_length_months != prefs.lease_length_months:
+        if apartment.lease_length_months < prefs.lease_length_months:
             return False
     if prefs.laundry and not set(apartment.laundry or []) & set(prefs.laundry):
         return False
