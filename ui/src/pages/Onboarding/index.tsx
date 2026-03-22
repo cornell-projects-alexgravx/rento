@@ -68,14 +68,15 @@ export function OnboardingPage() {
             <h2
               style={{
                 fontFamily: "'Montserrat', sans-serif",
-                fontSize: 'clamp(20px, 3vw, 30px)',
-                fontWeight: 700,
-                color: '#FFFFFF',
+                fontSize: 48,
+                fontStyle: 'normal',
+                fontWeight: 600,
+                color: '#FFF',
                 textAlign: 'center',
-                maxWidth: 600,
+                lineHeight: '130%',
+                letterSpacing: '-1.44px',
                 margin: '0 auto 40px',
-                lineHeight: 1.35,
-                letterSpacing: '-0.5px',
+                maxWidth: 700,
               }}
             >
               Three quick steps&nbsp;— then let AI match, negotiate, and keep you posted.

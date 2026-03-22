@@ -153,8 +153,8 @@ function SearchStage() {
       <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-3">
 
         {/* Data coverage */}
-        <div className="bg-zinc-900 rounded-xl border border-zinc-700 p-3">
-          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Data Coverage</p>
+        <div className="bg-white dark:bg-[#0F0F0F] rounded-xl border border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] p-3">
+          <p className="text-[10px] font-semibold text-[#6B6B6B] uppercase tracking-wider mb-2">Data Coverage</p>
           <div className="grid grid-cols-2 gap-2">
             {[
               { label: 'Scanned', value: '1,240', sub: 'active listings', color: 'text-indigo-600 dark:text-indigo-400' },
@@ -162,10 +162,10 @@ function SearchStage() {
               { label: 'Updated', value: '91', sub: 'price changes', color: 'text-amber-600 dark:text-amber-400' },
               { label: 'Removed', value: '14', sub: 'no longer listed', color: 'text-red-500' },
             ].map(({ label, value, sub, color }) => (
-              <div key={label} className="bg-zinc-800/40 rounded-lg p-2">
+              <div key={label} className="bg-[#F0F0F1]/40 dark:bg-[#1A1A1A]/40 rounded-lg p-2">
                 <div className={cn('text-lg font-bold leading-tight', color)}>{value}</div>
-                <div className="text-[10px] font-medium text-slate-600 dark:text-slate-300 leading-tight">{label}</div>
-                <div className="text-[9px] text-slate-400 leading-tight">{sub}</div>
+                <div className="text-[10px] font-medium text-[#4A4A4A] dark:text-yellow-400/70 leading-tight">{label}</div>
+                <div className="text-[9px] text-[#6B6B6B] leading-tight">{sub}</div>
               </div>
             ))}
           </div>

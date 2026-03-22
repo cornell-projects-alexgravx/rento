@@ -61,12 +61,12 @@ function ListCard({ listing, selected, onClick }: {
       className={cn(
         'flex gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-150 hover:shadow-sm',
         selected
-          ? 'border-indigo-400 bg-indigo-50/60 dark:bg-indigo-900/15 shadow-sm'
-          : 'border-zinc-700 bg-zinc-900 hover:border-slate-300 dark:hover:border-slate-600'
+          ? 'border-indigo-400 bg-indigo-50/60 dark:bg-yellow-400/10 shadow-sm'
+          : 'border-[rgba(1,2,5,0.10)] bg-white hover:border-[rgba(1,2,5,0.25)] dark:hover:border-[rgba(255,215,0,0.30)]'
       )}
     >
       {/* Thumbnail */}
-      <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-zinc-700">
+      <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-[#E2E2E3]">
         <img
           src={listing.images[0]}
           alt={listing.title}
@@ -79,7 +79,7 @@ function ListCard({ listing, selected, onClick }: {
       {/* Text */}
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-1">
-          <p className="text-xs font-semibold text-slate-800 dark:text-slate-100 leading-tight line-clamp-1">
+          <p className="text-xs font-semibold text-[#010205] dark:text-white leading-tight line-clamp-1">
             {listing.title}
           </p>
           <span
@@ -93,13 +93,13 @@ function ListCard({ listing, selected, onClick }: {
             {listing.matchScore}%
           </span>
         </div>
-        <p className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold mt-0.5">
-          {formatCurrency(listing.price)}<span className="text-slate-400 font-normal">/mo</span>
+        <p className="text-[11px] text-indigo-600 dark:text-yellow-400 font-semibold mt-0.5">
+          {formatCurrency(listing.price)}<span className="text-[#6B6B6B] font-normal">/mo</span>
         </p>
-        <p className="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1 line-clamp-1">
+        <p className="text-[11px] text-[#6B6B6B] mt-0.5 flex items-center gap-1 line-clamp-1">
           <MapPin size={9} />{listing.neighborhood}
         </p>
-        <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-400">
+        <div className="flex items-center gap-2 mt-1 text-[10px] text-[#6B6B6B]">
           <span>{listing.bedrooms}</span>
           <span>·</span>
           <span className="flex items-center gap-0.5"><Clock size={9} />{listing.commuteTime}m</span>
@@ -131,7 +131,7 @@ function MapView({ listings, selectedId, onSelect, height = 'h-56' }: {
   height?: string
 }) {
   return (
-    <div className={cn('relative w-full rounded-xl overflow-hidden border border-zinc-700 bg-gradient-to-br from-zinc-800 to-zinc-700', height)}>
+    <div className={cn('relative w-full rounded-xl overflow-hidden border border-[rgba(1,2,5,0.10)] bg-gradient-to-br from-[#F0F0F1] to-[#E2E2E3]', height)}>
       {/* Grid lines */}
       <svg className="absolute inset-0 w-full h-full opacity-10">
         <defs><pattern id="mg" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="1"/></pattern></defs>
@@ -147,7 +147,7 @@ function MapView({ listings, selectedId, onSelect, height = 'h-56' }: {
       </svg>
 
       {/* Location label */}
-      <div className="absolute top-2 left-2 bg-zinc-900/90 rounded-lg px-2 py-1 text-[11px] font-medium text-slate-600 dark:text-slate-400 shadow border border-zinc-700 z-20">
+      <div className="absolute top-2 left-2 bg-white/90 rounded-lg px-2 py-1 text-[11px] font-medium text-[#4A4A4A] dark:text-yellow-400/60 shadow border border-[rgba(1,2,5,0.10)] z-20">
         San Francisco, CA
       </div>
 
@@ -175,12 +175,12 @@ function MapView({ listings, selectedId, onSelect, height = 'h-56' }: {
             <div className={cn('w-1.5 h-1.5 rounded-full mx-auto -mt-px', isSel ? 'bg-red-500' : 'bg-blue-500')} />
 
             {/* Hover tooltip */}
-            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none w-36 bg-zinc-800 text-white text-[10px] rounded-lg p-2 shadow-xl z-40">
+            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none w-36 bg-[#F0F0F1] text-[#010205] text-[10px] rounded-lg p-2 shadow-xl z-40">
               <p className="font-semibold leading-tight">{l.title}</p>
-              <p className="text-slate-300 mt-0.5">{l.neighborhood}</p>
+              <p className="text-[#9A9A9A] mt-0.5">{l.neighborhood}</p>
               <div className="flex items-center gap-1 mt-1">
                 <span className={cn('w-1.5 h-1.5 rounded-full', isSel ? 'bg-red-400' : 'bg-blue-400')} />
-                <span className="text-slate-300">{isSel ? 'Currently viewing' : 'In list'}</span>
+                <span className="text-[#9A9A9A]">{isSel ? 'Currently viewing' : 'In list'}</span>
               </div>
             </div>
           </button>
@@ -188,12 +188,12 @@ function MapView({ listings, selectedId, onSelect, height = 'h-56' }: {
       })}
 
       {/* Legend */}
-      <div className="absolute bottom-2 right-2 bg-zinc-900/95 rounded-lg p-2 shadow-md border border-zinc-700 space-y-1 z-20">
-        <div className="flex items-center gap-1.5 text-[10px] text-slate-600 dark:text-slate-400">
+      <div className="absolute bottom-2 right-2 bg-white/95 rounded-lg p-2 shadow-md border border-[rgba(1,2,5,0.10)] space-y-1 z-20">
+        <div className="flex items-center gap-1.5 text-[10px] text-[#4A4A4A] dark:text-yellow-400/60">
           <div className="w-2.5 h-2.5 rounded-full bg-red-500 ring-1 ring-red-300"/>
           Viewing
         </div>
-        <div className="flex items-center gap-1.5 text-[10px] text-slate-600 dark:text-slate-400">
+        <div className="flex items-center gap-1.5 text-[10px] text-[#4A4A4A] dark:text-yellow-400/60">
           <div className="w-2.5 h-2.5 rounded-full bg-blue-500"/>
           In list
         </div>
@@ -225,8 +225,8 @@ function NegotiationHistory({ listingId }: { listingId: string }) {
   if (messages.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center">
-        <MessageSquare size={28} className="text-slate-300 dark:text-slate-600 mb-2" />
-        <p className="text-sm text-slate-500 dark:text-slate-400">No negotiation started yet</p>
+        <MessageSquare size={28} className="text-[#9A9A9A] dark:text-slate-600 mb-2" />
+        <p className="text-sm text-[#6B6B6B] dark:text-yellow-400/60">No negotiation started yet</p>
         <button className="mt-3 flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 transition-colors">
           <Plus size={13} /> Start negotiation
         </button>
@@ -246,7 +246,7 @@ function NegotiationHistory({ listingId }: { listingId: string }) {
           </div>
           <div className="flex gap-1 shrink-0">
             <button className="px-2 py-1 bg-emerald-500 text-white text-[10px] font-semibold rounded">Accept</button>
-            <button className="px-2 py-1 bg-zinc-700 text-zinc-300 text-[10px] font-semibold rounded">Decline</button>
+            <button className="px-2 py-1 bg-[#E2E2E3] text-[#4A4A4A] text-[10px] font-semibold rounded">Decline</button>
           </div>
         </div>
       )}
@@ -261,10 +261,10 @@ function NegotiationHistory({ listingId }: { listingId: string }) {
             </div>
             <div className={cn('flex-1 max-w-[80%] px-3 py-2 rounded-xl text-xs leading-relaxed',
               m.sender === 'landlord'
-                ? 'bg-zinc-700 text-slate-700 dark:text-slate-300 rounded-tr-sm'
-                : 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-900 dark:text-indigo-100 rounded-tl-sm')}>
+                ? 'bg-[#E2E2E3] text-[#1A1A1F] dark:text-yellow-400/70 rounded-tr-sm'
+                : 'bg-indigo-50 dark:bg-yellow-400/10 text-indigo-900 dark:text-white rounded-tl-sm')}>
               {m.text}
-              <div className="text-[9px] text-slate-400 mt-1">{m.time}</div>
+              <div className="text-[9px] text-[#6B6B6B] mt-1">{m.time}</div>
             </div>
           </div>
         ))}
@@ -276,7 +276,7 @@ function NegotiationHistory({ listingId }: { listingId: string }) {
           value={reply}
           onChange={e => setReply(e.target.value)}
           placeholder="Send a message..."
-          className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-zinc-700 bg-zinc-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="flex-1 px-3 py-1.5 text-xs rounded-lg border border-[rgba(1,2,5,0.10)] bg-white text-[#010205] dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
         <button className="p-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
           <Send size={13} />
@@ -331,11 +331,11 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Module manager toolbar */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-zinc-700 shrink-0 bg-zinc-900">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-[rgba(1,2,5,0.10)] shrink-0 bg-white dark:bg-[#0F0F0F]">
         <div className="flex items-center gap-2">
-          <LayoutGrid size={14} className="text-slate-400" />
-          <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Dashboard</span>
-          <span className="text-xs text-slate-400">· {visibleModules.length} modules · drag header to move · drag corner to resize</span>
+          <LayoutGrid size={14} className="text-[#6B6B6B]" />
+          <span className="text-xs font-medium text-[#4A4A4A] dark:text-yellow-400/60">Dashboard</span>
+          <span className="text-xs text-[#6B6B6B]">· {visibleModules.length} modules · drag header to move · drag corner to resize</span>
         </div>
         <div className="relative">
           <button
@@ -344,19 +344,19 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
             className={cn(
               'flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border transition-colors',
               hiddenModules.length === 0
-                ? 'opacity-40 cursor-not-allowed border-zinc-700 text-slate-400'
-                : 'border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20'
+                ? 'opacity-40 cursor-not-allowed border-[rgba(1,2,5,0.10)] text-[#6B6B6B]'
+                : 'border-indigo-300 dark:border-indigo-700 text-indigo-600 dark:text-yellow-400 hover:bg-indigo-50 dark:hover:bg-yellow-400/10'
             )}
           >
             <Plus size={11} /> Add module
           </button>
           {addMenuOpen && hiddenModules.length > 0 && (
-            <div className="absolute right-0 top-8 w-44 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-20 overflow-hidden">
+            <div className="absolute right-0 top-8 w-44 bg-white dark:bg-[#0F0F0F] border border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] rounded-xl shadow-xl z-20 overflow-hidden">
               {hiddenModules.map(m => (
                 <button
                   key={m.key}
                   onClick={() => { addDashboardModule(m.key); setAddMenuOpen(false) }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-zinc-700 transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[#1A1A1F] dark:text-yellow-400/70 hover:bg-[#E2E2E3] dark:hover:bg-[#242424] transition-colors"
                 >
                   <span>{m.emoji}</span>{m.label}
                 </button>
@@ -370,9 +370,9 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
       <div ref={containerRef} className="flex-1 overflow-y-auto scrollbar-thin">
         {visibleModules.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center h-full">
-            <LayoutGrid size={32} className="text-slate-300 dark:text-slate-600 mb-3" />
-            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">All modules removed</p>
-            <p className="text-xs text-slate-400 mt-1">Click "Add module" above to restore</p>
+            <LayoutGrid size={32} className="text-[#9A9A9A] dark:text-slate-600 mb-3" />
+            <p className="text-sm text-[#6B6B6B] dark:text-yellow-400/60 font-medium">All modules removed</p>
+            <p className="text-xs text-[#6B6B6B] mt-1">Click "Add module" above to restore</p>
           </div>
         ) : (
           <GridLayout
@@ -390,18 +390,18 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
             {visibleModules.map(({ key, label, emoji }) => (
               <div
                 key={key}
-                className="bg-zinc-900 rounded-xl border border-zinc-700 overflow-hidden flex flex-col"
+                className="bg-white dark:bg-[#0F0F0F] rounded-xl border border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] overflow-hidden flex flex-col"
               >
                 {/* Drag handle header */}
-                <div className="drag-handle flex items-center justify-between px-3 py-2 bg-zinc-800/60 border-b border-zinc-700 cursor-grab active:cursor-grabbing shrink-0 select-none">
+                <div className="drag-handle flex items-center justify-between px-3 py-2 bg-[#F0F0F1]/60 dark:bg-[#1A1A1A]/60 border-b border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] cursor-grab active:cursor-grabbing shrink-0 select-none">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-slate-400 dark:text-slate-500 text-xs leading-none">⠿</span>
-                    <span className="text-xs font-medium text-slate-600 dark:text-slate-400">{emoji} {label}</span>
+                    <span className="text-[#6B6B6B] dark:text-slate-500 text-xs leading-none">⠿</span>
+                    <span className="text-xs font-medium text-[#4A4A4A] dark:text-yellow-400/60">{emoji} {label}</span>
                   </div>
                   <button
                     onMouseDown={e => e.stopPropagation()}
                     onClick={() => removeDashboardModule(key)}
-                    className="p-0.5 text-slate-300 hover:text-slate-500 dark:hover:text-slate-400 transition-colors rounded"
+                    className="p-0.5 text-[#9A9A9A] hover:text-[#4A4A4A] dark:hover:text-slate-400 transition-colors rounded"
                   >
                     <X size={13} />
                   </button>
@@ -413,7 +413,7 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
               {key === 'info' && (
                 <div className="space-y-3">
                   {/* ── Image carousel (top of info) ── */}
-                  <div className="relative w-full h-52 rounded-xl overflow-hidden bg-zinc-700 shrink-0">
+                  <div className="relative w-full h-52 rounded-xl overflow-hidden bg-[#E2E2E3] shrink-0">
                     <img
                       src={listing.images[imageIdx]}
                       alt={listing.title}
@@ -449,14 +449,14 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
 
                   {/* ── Title + price ── */}
                   <div>
-                    <h3 className="font-bold text-slate-900 dark:text-slate-100">{listing.title}</h3>
-                    <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5"><MapPin size={11} />{listing.address}</p>
+                    <h3 className="font-bold text-[#010205] dark:text-white">{listing.title}</h3>
+                    <p className="text-xs text-[#6B6B6B] flex items-center gap-1 mt-0.5"><MapPin size={11} />{listing.address}</p>
                     <div className="flex items-center gap-2 mt-2">
-                      <span className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
-                        {formatCurrency(listing.price)}<span className="text-xs font-normal text-slate-400">/mo</span>
+                      <span className="text-xl font-bold text-indigo-600 dark:text-yellow-400">
+                        {formatCurrency(listing.price)}<span className="text-xs font-normal text-[#6B6B6B]">/mo</span>
                       </span>
                       {listing.originalPrice && listing.originalPrice > listing.price && (
-                        <span className="text-xs text-slate-400 line-through">{formatCurrency(listing.originalPrice)}</span>
+                        <span className="text-xs text-[#6B6B6B] line-through">{formatCurrency(listing.originalPrice)}</span>
                       )}
                     </div>
                   </div>
@@ -469,9 +469,9 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
                       { label: 'Sqft', value: listing.sqft.toLocaleString() },
                       { label: 'Commute', value: `${listing.commuteTime}m` },
                     ].map(({ label, value }) => (
-                      <div key={label} className="bg-zinc-800/50 rounded-lg p-2 text-center">
-                        <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">{value}</div>
-                        <div className="text-[10px] text-slate-400">{label}</div>
+                      <div key={label} className="bg-[#F0F0F1]/50 dark:bg-[#1A1A1A]/50 rounded-lg p-2 text-center">
+                        <div className="text-sm font-semibold text-[#010205] dark:text-white">{value}</div>
+                        <div className="text-[10px] text-[#6B6B6B]">{label}</div>
                       </div>
                     ))}
                   </div>
@@ -487,9 +487,9 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
                       { label: 'Laundry', value: listing.laundry },
                       { label: 'Parking', value: listing.parking ? 'Included' : 'Not included' },
                     ].map(({ label, value }) => (
-                      <div key={label} className="flex justify-between py-1 border-b border-zinc-700/50 text-xs">
-                        <span className="text-slate-500">{label}</span>
-                        <span className="font-medium text-slate-800 dark:text-slate-200">{value}</span>
+                      <div key={label} className="flex justify-between py-1 border-b border-[rgba(1,2,5,0.06)] text-xs">
+                        <span className="text-[#6B6B6B]">{label}</span>
+                        <span className="font-medium text-[#010205] dark:text-white">{value}</span>
                       </div>
                     ))}
                   </div>
@@ -516,16 +516,16 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
                 <div className="space-y-3">
                   <div className="flex items-center gap-1.5 mb-1">
                     <Sparkles size={13} className="text-indigo-500" />
-                    <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-300 uppercase tracking-wide">Why this matches you</span>
+                    <span className="text-xs font-semibold text-indigo-700 dark:text-yellow-300 uppercase tracking-wide">Why this matches you</span>
                   </div>
                   <ul className="space-y-2">
                     {listing.aiRationale.map((r, i) => (
-                      <li key={i} className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-400">
+                      <li key={i} className="flex items-start gap-2 text-xs text-[#4A4A4A] dark:text-yellow-400/60">
                         <CheckCircle2 size={11} className="text-emerald-500 mt-0.5 shrink-0" />{r}
                       </li>
                     ))}
                   </ul>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 italic leading-relaxed border-l-2 border-indigo-200 dark:border-indigo-700 pl-3">
+                  <p className="text-xs text-[#6B6B6B] dark:text-yellow-400/60 italic leading-relaxed border-l-2 border-indigo-200 dark:border-indigo-700 pl-3">
                     {listing.aiExplanation}
                   </p>
                 </div>
@@ -545,7 +545,7 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
                   {/* Neighborhood name */}
                   <div className="flex items-center gap-2">
                     <MapPin size={13} className="text-indigo-500 shrink-0" />
-                    <span className="font-semibold text-sm text-slate-800 dark:text-slate-100">{listing.neighborhood}</span>
+                    <span className="font-semibold text-sm text-[#010205] dark:text-white">{listing.neighborhood}</span>
                   </div>
 
                   {/* Score cards */}
@@ -564,9 +564,9 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
                   </div>
 
                   {/* Price trend */}
-                  <div className="bg-zinc-800/50 rounded-xl p-3">
+                  <div className="bg-[#F0F0F1]/50 dark:bg-[#1A1A1A]/50 rounded-xl p-3">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Rent trend (6 mo)</span>
+                      <span className="text-xs font-medium text-[#4A4A4A] dark:text-yellow-400/60">Rent trend (6 mo)</span>
                       {listing.priceTrend[listing.priceTrend.length - 1] < listing.priceTrend[0]
                         ? <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-0.5"><TrendingDown size={10} />Dropping</span>
                         : <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">Rising</span>
@@ -580,10 +580,10 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
                         return (
                           <div key={i} className="flex-1 flex flex-col justify-end gap-0.5">
                             <div
-                              className={cn('w-full rounded-sm', i === listing.priceTrend.length - 1 ? 'bg-indigo-400' : 'bg-zinc-600')}
+                              className={cn('w-full rounded-sm', i === listing.priceTrend.length - 1 ? 'bg-indigo-400 dark:bg-yellow-400' : 'bg-[#E2E2E3] dark:bg-[#1A1A1A]')}
                               style={{ height: `${Math.max(12, h)}%` }}
                             />
-                            <span className="text-[8px] text-slate-400 text-center">{['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'][i]}</span>
+                            <span className="text-[8px] text-[#6B6B6B] text-center">{['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'][i]}</span>
                           </div>
                         )
                       })}
@@ -592,19 +592,19 @@ function DetailDashboard({ listing, filteredListings }: { listing: Listing; filt
 
                   {/* Nearby POIs */}
                   <div>
-                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Nearby Places</p>
+                    <p className="text-[10px] font-semibold text-[#6B6B6B] uppercase tracking-wider mb-2">Nearby Places</p>
                     <div className="space-y-2">
                       {listing.nearbyPOIs.map(poi => {
                         const Icon = poiIcons[poi.type] || MapPin
                         return (
                           <div key={poi.name} className="flex items-center justify-between text-xs">
-                            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-                              <div className="w-6 h-6 rounded-lg bg-zinc-700 flex items-center justify-center shrink-0">
-                                <Icon size={11} className="text-slate-400" />
+                            <div className="flex items-center gap-2 text-[#4A4A4A] dark:text-yellow-400/60">
+                              <div className="w-6 h-6 rounded-lg bg-[#E2E2E3] dark:bg-[#1A1A1A] flex items-center justify-center shrink-0">
+                                <Icon size={11} className="text-[#6B6B6B]" />
                               </div>
                               {poi.name}
                             </div>
-                            <span className="text-slate-400 text-[10px]">{poi.distance}</span>
+                            <span className="text-[#6B6B6B] text-[10px]">{poi.distance}</span>
                           </div>
                         )
                       })}
@@ -651,7 +651,7 @@ export function Match() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* ── Status filter tabs ── */}
-      <div className="flex items-center gap-1 px-4 py-2.5 border-b border-zinc-700 bg-zinc-900 shrink-0">
+      <div className="flex items-center gap-1 px-4 py-2.5 border-b border-[rgba(1,2,5,0.10)] bg-white dark:bg-[#0F0F0F] shrink-0">
         {STATUS_FILTERS.map(({ key, label }) => {
           const count = key === 'all'
             ? listings.length
@@ -663,16 +663,16 @@ export function Match() {
               className={cn(
                 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
                 negStatusFilter === key
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-zinc-800'
+                  ? 'bg-indigo-600 dark:bg-yellow-400 dark:text-black text-white shadow-sm'
+                  : 'text-[#6B6B6B] dark:text-yellow-400/60 hover:text-[#1A1A1F] dark:hover:text-yellow-400/70 hover:bg-[#F0F0F1] dark:hover:bg-[#1A1A1A]'
               )}
             >
               {label}
               <span className={cn(
                 'text-[10px] px-1.5 py-0.5 rounded-full font-bold',
                 negStatusFilter === key
-                  ? 'bg-white/25 text-white'
-                  : 'bg-zinc-700 text-slate-500 dark:text-slate-400'
+                  ? 'bg-white/25 text-white dark:bg-black/25 dark:text-black'
+                  : 'bg-[#E2E2E3] dark:bg-[#1A1A1A] text-[#6B6B6B] dark:text-yellow-400/60'
               )}>
                 {count}
               </span>
@@ -680,28 +680,28 @@ export function Match() {
           )
         })}
         <div className="flex-1" />
-        <span className="text-xs text-slate-400">{filtered.length} apartments</span>
+        <span className="text-xs text-[#6B6B6B]">{filtered.length} apartments</span>
       </div>
 
       {/* ── Body: sidebar + detail ── */}
       <div className="flex flex-1 overflow-hidden">
         {/* LEFT: collapsible list sidebar */}
         <aside className={cn(
-          'flex flex-col border-r border-zinc-700 bg-zinc-900 transition-all duration-300 shrink-0 overflow-hidden',
+          'flex flex-col border-r border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] bg-white dark:bg-[#0F0F0F] transition-all duration-300 shrink-0 overflow-hidden',
           listSidebarOpen ? 'w-72' : 'w-0'
         )}>
           {listSidebarOpen && (
             <>
               {/* Sidebar header */}
-              <div className="flex items-center justify-between px-3 py-2.5 border-b border-zinc-700 shrink-0">
-                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <div className="flex items-center justify-between px-3 py-2.5 border-b border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] shrink-0">
+                <span className="text-xs font-semibold text-[#1A1A1F] dark:text-yellow-400/70">
                   Apartments
                 </span>
                 <div className="flex items-center gap-1">
                   {/* Price sort toggle */}
                   <button
                     onClick={() => setSortOrder(o => o === 'price-asc' ? 'price-desc' : 'price-asc')}
-                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium text-slate-500 dark:text-slate-400 hover:bg-zinc-800 transition-colors"
+                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium text-[#6B6B6B] dark:text-yellow-400/60 hover:bg-[#F0F0F1] dark:hover:bg-[#1A1A1A] transition-colors"
                     title="Sort by price"
                   >
                     <ArrowUpDown size={11} />
@@ -709,7 +709,7 @@ export function Match() {
                   </button>
                   <button
                     onClick={toggleListSidebar}
-                    className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-zinc-800 transition-colors"
+                    className="p-1 rounded-lg text-[#6B6B6B] hover:text-[#4A4A4A] hover:bg-[#F0F0F1] dark:hover:bg-[#1A1A1A] transition-colors"
                   >
                     <PanelLeftClose size={15} />
                   </button>
@@ -719,7 +719,7 @@ export function Match() {
               <div className="flex-1 overflow-y-auto scrollbar-thin p-2 space-y-2">
                 {filtered.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center px-4">
-                    <p className="text-sm text-slate-500 dark:text-slate-400">No apartments in this status</p>
+                    <p className="text-sm text-[#6B6B6B] dark:text-yellow-400/60">No apartments in this status</p>
                   </div>
                 ) : (
                   filtered.map(l => (
@@ -740,7 +740,7 @@ export function Match() {
         {!listSidebarOpen && (
           <button
             onClick={toggleListSidebar}
-            className="flex flex-col items-center justify-center w-8 border-r border-zinc-700 bg-zinc-900 hover:bg-zinc-800 transition-colors text-zinc-400 hover:text-zinc-200 gap-1"
+            className="flex flex-col items-center justify-center w-8 border-r border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] bg-white dark:bg-[#0F0F0F] hover:bg-[#F0F0F1] dark:hover:bg-[#1A1A1A] transition-colors text-[#6B6B6B] hover:text-[#1A1A1F] gap-1"
           >
             <PanelLeftOpen size={14} />
             <span className="text-[9px] writing-mode-vertical font-medium tracking-wide"
@@ -751,14 +751,14 @@ export function Match() {
         )}
 
         {/* RIGHT: modular detail dashboard */}
-        <div className="flex-1 overflow-hidden bg-zinc-950">
+        <div className="flex-1 overflow-hidden bg-[#F6F6F7] dark:bg-black">
           {selectedListing ? (
             <DetailDashboard listing={selectedListing} filteredListings={filtered} />
           ) : (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <div className="text-5xl mb-4">🏠</div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">Select an apartment to view details</p>
+                <p className="text-sm text-[#6B6B6B] dark:text-yellow-400/60">Select an apartment to view details</p>
               </div>
             </div>
           )}

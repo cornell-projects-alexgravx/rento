@@ -8,7 +8,7 @@ export function DashboardPage() {
   const { topTab } = useStore()
 
   return (
-    <div className="h-screen flex flex-col bg-zinc-950 overflow-hidden">
+    <div className="h-screen flex flex-col bg-[#F6F6F7] dark:bg-black overflow-hidden">
       <Navbar />
       <main className="flex-1 overflow-hidden">
         {topTab === 'match' && <Match />}
