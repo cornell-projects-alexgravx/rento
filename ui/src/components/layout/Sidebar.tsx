@@ -25,15 +25,15 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'flex flex-col border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 transition-all duration-300 shrink-0 z-20',
+        'flex flex-col border-r border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)] bg-white dark:bg-[#0F0F0F] transition-all duration-300 shrink-0 z-20',
         sidebarOpen ? 'w-56' : 'w-16'
       )}
     >
       {/* Toggle button */}
-      <div className="flex items-center justify-end p-2 border-b border-slate-200 dark:border-slate-700">
+      <div className="flex items-center justify-end p-2 border-b border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)]">
         <button
           onClick={toggleSidebar}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:text-slate-300 dark:hover:bg-slate-800 transition-colors"
+          className="p-1.5 rounded-lg text-[#6B6B6B] dark:text-yellow-400/60 hover:text-[#010205] dark:hover:text-yellow-400 hover:bg-[#F0F0F1] dark:hover:bg-[#1A1A1A] transition-colors"
           aria-label="Toggle sidebar"
         >
           {sidebarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
@@ -58,8 +58,8 @@ export function Sidebar() {
               className={cn(
                 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 group relative',
                 isActive
-                  ? 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200'
+                  ? 'bg-[#010205]/8 text-[#010205] dark:bg-yellow-400/10 dark:text-yellow-400'
+                  : 'text-[#6B6B6B] dark:text-yellow-400/50 hover:bg-[#F0F0F1] dark:hover:bg-[#1A1A1A] hover:text-[#010205] dark:hover:text-yellow-400'
               )}
             >
               <div className="relative shrink-0">
@@ -81,14 +81,14 @@ export function Sidebar() {
               {sidebarOpen && (
                 <div className="flex-1 text-left overflow-hidden">
                   <div className="text-sm font-medium leading-tight">{label}</div>
-                  <div className="text-xs text-slate-400 dark:text-slate-500 truncate">
+                  <div className="text-xs text-[#9A9A9A] dark:text-yellow-400/40 truncate">
                     {description}
                   </div>
                 </div>
               )}
 
               {!sidebarOpen && (
-                <div className="absolute left-full ml-2 px-2 py-1 bg-slate-800 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
+                <div className="absolute left-full ml-2 px-2 py-1 bg-[#010205] dark:bg-yellow-400 text-white dark:text-black text-xs rounded-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
                   {label}
                 </div>
               )}
@@ -99,9 +99,9 @@ export function Sidebar() {
 
       {/* Stats at bottom when expanded */}
       {sidebarOpen && (
-        <div className="p-3 border-t border-slate-200 dark:border-slate-700">
-          <div className="rounded-lg bg-slate-50 dark:bg-slate-800 p-3 space-y-2">
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium">
+        <div className="p-3 border-t border-[rgba(1,2,5,0.10)] dark:border-[rgba(255,215,0,0.15)]">
+          <div className="rounded-lg bg-[#F0F0F1] dark:bg-[#1A1A1A] p-3 space-y-2">
+            <div className="flex items-center gap-1.5 text-xs text-[#6B6B6B] dark:text-yellow-400/60 font-medium">
               <TrendingUp size={12} />
               Session Stats
             </div>
@@ -111,10 +111,10 @@ export function Sidebar() {
                 { label: 'Nego.', value: agentStatus.negotiationsActive },
               ].map(({ label, value }) => (
                 <div key={label} className="text-center">
-                  <div className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                  <div className="text-lg font-bold text-[#6A5CFF] dark:text-yellow-400">
                     {value}
                   </div>
-                  <div className="text-[10px] text-slate-400">{label}</div>
+                  <div className="text-[10px] text-[#9A9A9A] dark:text-yellow-400/40">{label}</div>
                 </div>
               ))}
             </div>
