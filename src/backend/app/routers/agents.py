@@ -5,6 +5,7 @@ per-resource agent status. Also provides a dev-only endpoint for
 simulating host replies during Agent 3 testing.
 """
 
+import json
 import uuid
 from datetime import datetime
 
@@ -22,7 +23,7 @@ from app.models.match import Match
 from app.models.message import Message
 from app.models.preferences import NegotiationPreferences
 from app.models.user import User
-from app.agents.agent1_image import run_agent1, run_agent1_batch
+from app.agents.agent1_image import is_agent1_running, run_agent1, run_agent1_batch
 from app.agents.agent2_recommend import run_agent2
 from app.agents.agent3_outreach import run_agent3
 from app.constants import DEBUG
@@ -252,12 +253,13 @@ async def get_apartment_agent_status(
 
     return {
         "apartment_id": apartment_id,
-        "image_labels_count": len(apt.image_labels or []),
+        "is_running": is_agent1_running(apartment_id),
         "image_labels": apt.image_labels or [],
         "last_agent1_log": {
             "id": last_log.id,
             "timestamp": last_log.timestamp.isoformat(),
-            "result": last_log.result,
+            "content": json.loads(last_log.content) if last_log.content else None,
+            "labels": json.loads(last_log.result) if last_log.result else [],
         }
         if last_log
         else None,

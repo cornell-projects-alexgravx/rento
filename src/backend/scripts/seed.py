@@ -54,13 +54,140 @@ USERS = [
     ("Connor Walsh", "+1 (929) 555-0913"),
 ]
 
+# Deterministic objective preferences per user (index matches USERS).
+# Each is intentionally broad enough to match many of the 500 apartments.
+USER_OBJ_PREFS = [
+    # Marcus Rivera — young professional, 1-bed, trendy Manhattan/Brooklyn
+    {
+        "bedroom_type": "1b",
+        "neighborhoods": ["SoHo", "Williamsburg", "Lower East Side"],
+        "min_budget": 2400,
+        "max_budget": 3800,
+        "lease_length_months": 12,
+        "laundry": ["in_unit"],
+        "parking": [],
+        "pets": False,
+        "work_lat": 40.7580,
+        "work_lon": -73.9855,
+        "commute_method": "transit",
+        "max_commute_minutes": 30,
+    },
+    # Priya Patel — budget-conscious, studio, Queens + affordable Brooklyn
+    {
+        "bedroom_type": "studio",
+        "neighborhoods": ["Astoria", "Bushwick", "Crown Heights"],
+        "min_budget": 1800,
+        "max_budget": 2600,
+        "lease_length_months": 12,
+        "laundry": ["on_site"],
+        "parking": [],
+        "pets": False,
+        "work_lat": 40.7484,
+        "work_lon": -73.9967,
+        "commute_method": "transit",
+        "max_commute_minutes": 45,
+    },
+    # Jordan Kim — family, 2-bed, upper Manhattan + Brooklyn
+    {
+        "bedroom_type": "2b",
+        "neighborhoods": ["Upper West Side", "Park Slope", "Astoria"],
+        "min_budget": 3200,
+        "max_budget": 4800,
+        "lease_length_months": 24,
+        "laundry": ["in_unit", "on_site"],
+        "parking": ["street"],
+        "pets": True,
+        "work_lat": 40.7282,
+        "work_lon": -74.0776,
+        "commute_method": "bike",
+        "max_commute_minutes": 30,
+    },
+    # Aaliyah Thompson — mid-range, 1-bed, Harlem + Brooklyn
+    {
+        "bedroom_type": "1b",
+        "neighborhoods": ["Harlem", "Crown Heights", "Bushwick", "Park Slope"],
+        "min_budget": 2200,
+        "max_budget": 3400,
+        "lease_length_months": 12,
+        "laundry": ["in_unit"],
+        "parking": [],
+        "pets": True,
+        "work_lat": 40.7614,
+        "work_lon": -73.9776,
+        "commute_method": "transit",
+        "max_commute_minutes": 45,
+    },
+    # Connor Walsh — high-budget, 3-bed, prime Manhattan
+    {
+        "bedroom_type": "3b",
+        "neighborhoods": ["Midtown", "Upper West Side", "SoHo"],
+        "min_budget": 4200,
+        "max_budget": 6500,
+        "lease_length_months": 24,
+        "laundry": ["in_unit"],
+        "parking": ["garage"],
+        "pets": False,
+        "work_lat": 40.7549,
+        "work_lon": -73.9840,
+        "commute_method": "drive",
+        "max_commute_minutes": 20,
+    },
+]
+
+# Deterministic subjective preferences per user (index matches USERS).
+USER_SUBJ_PREFS = [
+    # Marcus Rivera
+    {
+        "priority_focus": "features",
+        "image_labels": ["modern", "bright", "open-kitchen"],
+        "neighborhood_labels": ["trendy", "walkable", "artsy"],
+    },
+    # Priya Patel
+    {
+        "priority_focus": "price",
+        "image_labels": ["cozy", "natural-light", "renovated"],
+        "neighborhood_labels": ["diverse", "vibrant", "community-oriented"],
+    },
+    # Jordan Kim
+    {
+        "priority_focus": "location",
+        "image_labels": ["spacious", "hardwood-floors", "natural-light"],
+        "neighborhood_labels": ["family-friendly", "quiet", "safe"],
+    },
+    # Aaliyah Thompson
+    {
+        "priority_focus": "features",
+        "image_labels": ["exposed-brick", "hardwood-floors", "cozy"],
+        "neighborhood_labels": ["artsy", "cultural", "historic"],
+    },
+    # Connor Walsh
+    {
+        "priority_focus": "price",
+        "image_labels": ["luxury", "city-views", "high-ceilings"],
+        "neighborhood_labels": ["upscale", "well-connected", "safe"],
+    },
+]
+
 IMAGE_LABELS_POOL = [
     "bright", "modern", "open-kitchen", "hardwood-floors", "high-ceilings",
     "cozy", "minimalist", "industrial", "renovated", "natural-light",
     "spacious", "city-views", "exposed-brick", "loft-style", "luxury",
 ]
 
-NOTIFICATION_TYPES = ["match", "price_drop", "negotiation"]
+# Apartment image keyword pools for loremflickr.com.
+# Each entry targets a distinct room/style so apartments get varied photo sets.
+APARTMENT_IMAGE_KEYWORDS = [
+    "apartment,interior,modern",
+    "living,room,sofa,cozy",
+    "kitchen,modern,clean,bright",
+    "bedroom,minimal,white",
+    "bathroom,modern,tiles",
+    "studio,loft,urban,nyc",
+    "dining,room,contemporary",
+    "home,interior,design",
+    "open,kitchen,apartment",
+    "hardwood,floors,bright,room",
+]
 
 NOTIFICATION_MESSAGES = [
     ("match", "New match found: {apt} in {hood} is a 94% match for your preferences."),
@@ -98,18 +225,10 @@ NEIGHBORHOOD_COORDS = {
     "Crown Heights": (40.6694, -73.9445),
 }
 
-PRIORITY_FOCUSES = ["features", "location", "price"]
 NEGOTIATION_STYLES = ["polite", "professional", "assertive", "friendly"]
 COMMUTE_METHODS = ["drive", "transit", "bike"]
 LAUNDRY_OPTIONS = [["in_unit"], ["on_site"], ["in_unit", "on_site"], []]
 PARKING_OPTIONS = [["garage"], ["street"], ["garage", "street"], []]
-NEIGHBORHOOD_VIBES = [
-    ["artsy", "trendy", "walkable"],
-    ["quiet", "residential", "family-friendly"],
-    ["diverse", "vibrant", "nightlife"],
-    ["historic", "cultural", "community-oriented"],
-    ["upscale", "safe", "well-connected"],
-]
 
 
 def rand_id() -> str:
@@ -141,6 +260,9 @@ async def seed(db: AsyncSession) -> None:
     await db.commit()
     print(f"Inserted {len(neighborhood_objs)} neighborhoods.")
 
+    # Build a lookup by name for use in preference seeding below.
+    neighborhood_by_name = {n.name: n for n in neighborhood_objs}
+
     # --- Users ---
     user_objs: list[User] = []
     for name, phone in USERS:
@@ -150,10 +272,11 @@ async def seed(db: AsyncSession) -> None:
     await db.commit()
     print(f"Inserted {len(user_objs)} users.")
 
-    # --- Apartments (~100) ---
+    # --- Apartments (500: 50 per neighborhood × 10 neighborhoods) ---
+    # image_labels left empty so Agent 1 can analyze them.
     apartment_objs: list[Apartment] = []
     apt_count = 0
-    per_neighborhood = 10  # 10 * 10 neighborhoods = 100
+    per_neighborhood = 50
     for neighbor in neighborhood_objs:
         lat_base, lon_base = NEIGHBORHOOD_COORDS[neighbor.name]
         for i in range(per_neighborhood):
@@ -163,16 +286,19 @@ async def seed(db: AsyncSession) -> None:
             price = round(random.randint(price_min, price_max) / 50) * 50
             apt_id = rand_id()
             num_images = random.randint(3, 5)
-            images = [f"https://picsum.photos/seed/{apt_id[:8]}-{j}/800/600" for j in range(num_images)]
+            images = [
+                f"https://loremflickr.com/800/600/{random.choice(APARTMENT_IMAGE_KEYWORDS)}?lock={apt_count * 10 + j}"
+                for j in range(num_images)
+            ]
             apt = Apartment(
                 id=apt_id,
-                name=f"{neighbor.name} {bedroom.upper()} #{random.randint(1, 30)}{chr(random.randint(65, 70))}",
+                name=f"{neighbor.name} {bedroom.upper()} #{random.randint(1, 99)}{chr(random.randint(65, 70))}",
                 bedroom_type=bedroom,
-                latitude=round(lat_base + random.uniform(-0.01, 0.01), 6),
-                longitude=round(lon_base + random.uniform(-0.01, 0.01), 6),
+                latitude=round(lat_base + random.uniform(-0.015, 0.015), 6),
+                longitude=round(lon_base + random.uniform(-0.015, 0.015), 6),
                 price=price,
                 neighbor_id=neighbor.id,
-                move_in_date=rand_date_future(7, 90),
+                move_in_date=rand_date_future(7, 120),
                 lease_length_months=random.choice([6, 12, 18, 24]),
                 laundry=random.choice(LAUNDRY_OPTIONS),
                 parking=random.choice(PARKING_OPTIONS),
@@ -180,7 +306,7 @@ async def seed(db: AsyncSession) -> None:
                 host_phone=f"+1 (212) 555-{random.randint(1000, 9999)}",
                 host_email=f"host{apt_count + 1}@rentolistings.nyc",
                 images=images,
-                image_labels=rand_subset(IMAGE_LABELS_POOL, 3, 5),
+                image_labels=[],  # left empty for Agent 1 to fill
                 created_at=datetime.utcnow(),
             )
             db.add(apt)
@@ -189,41 +315,43 @@ async def seed(db: AsyncSession) -> None:
     await db.commit()
     print(f"Inserted {len(apartment_objs)} apartments.")
 
-    # --- Objective Preferences (one per user) ---
-    for user in user_objs:
-        selected = random.sample([n.id for n in neighborhood_objs], random.randint(2, 5))
-        bedroom = random.choice(BEDROOM_TYPES)
-        price_min, price_max = PRICE_RANGES[bedroom]
+    # --- Objective Preferences (one per user, deterministic so matches are guaranteed) ---
+    for user, prefs in zip(user_objs, USER_OBJ_PREFS):
+        selected_ids = [
+            neighborhood_by_name[name].id
+            for name in prefs["neighborhoods"]
+            if name in neighborhood_by_name
+        ]
         obj = ObjectivePreferences(
             id=rand_id(),
             user_id=user.id,
-            bedroom_type=bedroom,
-            selected_areas=selected,
-            min_budget=price_min,
-            max_budget=price_max,
+            bedroom_type=prefs["bedroom_type"],
+            selected_areas=selected_ids,
+            min_budget=prefs["min_budget"],
+            max_budget=prefs["max_budget"],
             move_in_date=rand_date_future(14, 60),
             move_out_date=None,
-            lease_length_months=random.choice([12, 24]),
-            laundry=random.choice(LAUNDRY_OPTIONS) or ["in_unit"],
-            parking=random.choice(PARKING_OPTIONS),
-            pets=random.choice([True, False]),
-            work_latitude=round(40.7549 + random.uniform(-0.05, 0.05), 6),
-            work_longitude=round(-73.9840 + random.uniform(-0.05, 0.05), 6),
-            commute_method=random.choice(COMMUTE_METHODS),
-            max_commute_minutes=random.choice([20, 30, 45, 60]),
+            lease_length_months=prefs["lease_length_months"],
+            laundry=prefs["laundry"],
+            parking=prefs["parking"],
+            pets=prefs["pets"],
+            work_latitude=prefs["work_lat"],
+            work_longitude=prefs["work_lon"],
+            commute_method=prefs["commute_method"],
+            max_commute_minutes=prefs["max_commute_minutes"],
         )
         db.add(obj)
     await db.commit()
     print(f"Inserted {len(user_objs)} objective preference records.")
 
-    # --- Subjective Preferences (one per user) ---
-    for user in user_objs:
+    # --- Subjective Preferences (one per user, deterministic) ---
+    for user, prefs in zip(user_objs, USER_SUBJ_PREFS):
         obj = SubjectivePreferences(
             id=rand_id(),
             user_id=user.id,
-            priority_focus=random.choice(PRIORITY_FOCUSES),
-            image_labels=rand_subset(IMAGE_LABELS_POOL, 2, 5),
-            neighborhood_labels=random.choice(NEIGHBORHOOD_VIBES),
+            priority_focus=prefs["priority_focus"],
+            image_labels=prefs["image_labels"],
+            neighborhood_labels=prefs["neighborhood_labels"],
         )
         db.add(obj)
     await db.commit()
@@ -239,7 +367,7 @@ async def seed(db: AsyncSession) -> None:
         obj = NegotiationPreferences(
             id=rand_id(),
             user_id=user.id,
-            enable_automation=random.choice([True, False]),
+            enable_automation=True,  # enabled for all users so Agent 3 can be tested
             negotiable_items=rand_subset(negotiable_pool, 2, 4),
             goals=rand_subset(goals_pool, 1, 3),
             max_rent=random.randint(3000, 6000),
@@ -268,11 +396,11 @@ async def seed(db: AsyncSession) -> None:
     await db.commit()
     print(f"Inserted {len(user_objs)} notification preference records.")
 
-    # --- Matches (30, no duplicate user-apartment pairs) ---
+    # --- Matches (100, no duplicate user-apartment pairs) ---
     match_pairs: set[tuple[str, str]] = set()
     match_objs: list[Match] = []
     attempts = 0
-    while len(match_objs) < 30 and attempts < 500:
+    while len(match_objs) < 100 and attempts < 2000:
         attempts += 1
         user = random.choice(user_objs)
         apt = random.choice(apartment_objs)
@@ -299,11 +427,11 @@ async def seed(db: AsyncSession) -> None:
     await db.commit()
     print(f"Inserted {len(match_objs)} matches.")
 
-    # --- Notifications (10) ---
+    # --- Notifications (20) ---
     apt_name_map = {a.id: a.name for a in apartment_objs}
     hood_map = {n.id: n.name for n in neighborhood_objs}
     apt_neighbor_map = {a.id: a.neighbor_id for a in apartment_objs}
-    for i in range(10):
+    for i in range(20):
         user = random.choice(user_objs)
         apt = random.choice(apartment_objs)
         apt_name = apt_name_map[apt.id]
@@ -329,7 +457,7 @@ async def seed(db: AsyncSession) -> None:
         )
         db.add(notif)
     await db.commit()
-    print("Inserted 10 notifications.")
+    print("Inserted 20 notifications.")
 
     print("\nSeed complete.")
     print(f"  Users:         {len(user_objs)}")
@@ -340,7 +468,7 @@ async def seed(db: AsyncSession) -> None:
     print(f"  Neg. prefs:    {len(user_objs)}")
     print(f"  Notif. prefs:  {len(user_objs)}")
     print(f"  Matches:       {len(match_objs)}")
-    print(f"  Notifications: 10")
+    print(f"  Notifications: 20")
 
 
 async def main() -> None:
