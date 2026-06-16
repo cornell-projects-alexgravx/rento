@@ -17,6 +17,9 @@ class Message(Base):
     type: Mapped[str] = mapped_column(String, nullable=False)
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     text: Mapped[str] = mapped_column(Text, nullable=False)
+    # Stores the RFC 2822 Message-ID of the inbound Gmail message so the
+    # poller can skip emails it has already inserted (idempotency).
+    external_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
 
     match: Mapped["Match | None"] = relationship("Match", back_populates="messages")
     agent3_logs: Mapped[list["Agent3Log"]] = relationship(

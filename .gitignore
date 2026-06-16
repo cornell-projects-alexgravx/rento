@@ -45,3 +45,7 @@ env/
 
 # Postgres data
 pgdata/
+
+
+credentials.json
+token.json

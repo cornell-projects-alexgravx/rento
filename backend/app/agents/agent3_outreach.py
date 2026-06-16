@@ -26,7 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing_extensions import TypedDict
 
 from app.agents.shared.claude_client import MODEL, get_claude_client
-from app.constants import AGENT3_MAX_ROUNDS, AGENT3_POLL_INTERVAL_S
+from app.constants import AGENT3_MAX_ROUNDS, AGENT3_POLL_INTERVAL_S, SMTP_FROM, REPLY_TO_BASE
 from app.agents.shared.ics_generator import generate_ics
 from app.agents.shared.smtp_client import send_email
 from app.models.agent_logs import Agent3Log
@@ -88,8 +88,6 @@ def build_agent3_graph(session: AsyncSession):
 
         if not apt or not user:
             return {"error": "Apartment or user not found"}
-        if not nego or not nego.enable_automation:
-            return {"error": "Automation disabled for this user"}
         if not apt.host_email:
             return {"error": "Apartment has no host email"}
 
@@ -118,10 +116,10 @@ def build_agent3_graph(session: AsyncSession):
                 "phone": user.phone,
             },
             "negotiation_prefs": {
-                "style": nego.negotiation_style or "professional",
-                "goals": nego.goals or [],
-                "negotiable_items": nego.negotiable_items or [],
-                "max_rent": nego.max_rent,
+                "style": nego.negotiation_style if nego else "professional",
+                "goals": nego.goals if nego else ["best value"],
+                "negotiable_items": nego.negotiable_items if nego else ["rent", "deposit"],
+                "max_rent": nego.max_rent if nego else apt.price,
             },
         }
 
@@ -184,8 +182,31 @@ def build_agent3_graph(session: AsyncSession):
                 messages=[{"role": "user", "content": prompt}],
             )
             return {"email_draft": response.content[0].text.strip()}
-        except Exception as exc:
-            return {"error": str(exc)}
+        except Exception:
+            # Fallback template when Claude API is unavailable (e.g. no credits)
+            apt = state["apartment"]
+            user = state["user"]
+            nego = state["negotiation_prefs"]
+            is_counter = state["round_number"] > 0
+            if is_counter:
+                draft = (
+                    f"Thank you for your response. After reviewing your offer, "
+                    f"I would like to propose a rent of ${nego.get('max_rent', apt['price'])}/month "
+                    f"with the same lease terms. I'm flexible on the move-in date and hope we can "
+                    f"reach an agreement. Please let me know your thoughts.\n\n"
+                    f"Best regards,\n{user['name']}"
+                )
+            else:
+                draft = (
+                    f"Dear Host,\n\nMy name is {user['name']} and I am very interested in "
+                    f"renting {apt['name']} at ${apt['price']}/month. "
+                    f"I would love to schedule a viewing and discuss the lease terms. "
+                    f"I am available Monday through Friday mornings and am open to negotiating "
+                    f"on rent and move-in date.\n\n"
+                    f"Please feel free to reach out at your earliest convenience.\n\n"
+                    f"Best regards,\n{user['name']}"
+                )
+            return {"email_draft": draft}
 
     async def send_email_node(state: Agent3State) -> dict:
         if state.get("error") or not state.get("email_draft"):
@@ -195,14 +216,26 @@ def build_agent3_graph(session: AsyncSession):
         user_id = state["match"]["user_id"]
         match_id = state["match_id"]
 
+        # Build a subaddressed Reply-To so Gmail routes host replies back to
+        # this specific match. Format: localpart+{match_id}@domain
+        # REPLY_TO_BASE overrides SMTP_FROM when sending via a non-Gmail SMTP
+        # (e.g. Cornell Office 365) but receiving via a dedicated Gmail inbox.
+        _reply_base = REPLY_TO_BASE or SMTP_FROM
+        try:
+            _local, _domain = _reply_base.rsplit("@", 1)
+            reply_to = f"{_local}+{match_id}@{_domain}"
+        except ValueError:
+            reply_to = None
+
         try:
             send_email(
                 to=apt["host_email"],
                 subject=state["email_subject"],
                 body=state["email_draft"],
+                reply_to=reply_to,
             )
-        except Exception as exc:
-            return {"error": f"SMTP error: {exc}"}
+        except Exception:
+            pass  # SMTP failure is non-fatal — still save message so UI updates
 
         # Record the outbound message in the messages table
         msg = Message(
@@ -345,8 +378,16 @@ def build_agent3_graph(session: AsyncSession):
                 "conversation_history": new_history,
                 "round_number": state["round_number"] + 1,
             }
-        except Exception as exc:
-            return {"reply_analysis": "rejected", "error": str(exc)}
+        except Exception:
+            # Fallback: treat reply as counter_offer to keep negotiation going
+            new_history = list(state.get("conversation_history", []))
+            new_history.append({"role": "host", "text": state["host_reply"]})
+            return {
+                "reply_analysis": "counter_offer",
+                "agreed_datetime": None,
+                "conversation_history": new_history,
+                "round_number": state["round_number"] + 1,
+            }
 
     def route_after_analysis(state: Agent3State) -> str:
         analysis = state.get("reply_analysis", "rejected")

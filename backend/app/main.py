@@ -32,7 +32,8 @@ from app.routers.v1 import notifications as v1_notifications
 from app.routers.v1 import tours as v1_tours
 
 from app.agents.agent1_image import run_agent1_batch
-from app.constants import CORS_ORIGINS
+from app.agents.shared.host_reply_poller import poll_host_replies
+from app.constants import CORS_ORIGINS, GMAIL_REPLY_POLL_INTERVAL_S
 
 
 @asynccontextmanager
@@ -40,6 +41,12 @@ async def lifespan(application: FastAPI):
     await create_all_tables()
     scheduler = AsyncIOScheduler()
     scheduler.add_job(run_agent1_batch, "interval", hours=2, id="agent1_batch")
+    scheduler.add_job(
+        poll_host_replies,
+        "interval",
+        seconds=GMAIL_REPLY_POLL_INTERVAL_S,
+        id="gmail_reply_poller",
+    )
     scheduler.start()
     yield
     scheduler.shutdown()

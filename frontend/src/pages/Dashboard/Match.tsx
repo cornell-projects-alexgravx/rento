@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useMap } from 'react-leaflet'
 import { GridLayout, verticalCompactor, useContainerWidth } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
@@ -54,6 +54,8 @@ function NegotiationChat({ listingId }: { listingId: string }) {
   const [messages, setMessages] = useState<MessageOut[]>([])
   const [loading, setLoading] = useState(true)
   const [starting, setStarting] = useState(false)
+  const [polling, setPolling] = useState(false)
+  const pollCountRef = useRef(0)
 
   useEffect(() => {
     let cancelled = false
@@ -65,12 +67,37 @@ function NegotiationChat({ listingId }: { listingId: string }) {
     return () => { cancelled = true }
   }, [listingId])
 
+  useEffect(() => {
+    if (!polling) return
+    pollCountRef.current = 0
+    const interval = setInterval(async () => {
+      pollCountRef.current++
+      if (pollCountRef.current > 20) {
+        setPolling(false)
+        return
+      }
+      try {
+        const msgs = await negotiationsApi.messages(listingId)
+        if (msgs.length > 0) {
+          setMessages(msgs)
+          setPolling(false)
+        }
+      } catch {
+        // ignore
+      }
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [polling, listingId])
+
   async function handleStartNegotiation() {
     setStarting(true)
     try {
       await negotiationsApi.start(listingId)
       const msgs = await negotiationsApi.messages(listingId)
       setMessages(msgs)
+      if (msgs.length === 0) {
+        setPolling(true)
+      }
     } catch {
       // ignore
     } finally {
@@ -90,14 +117,26 @@ function NegotiationChat({ listingId }: { listingId: string }) {
     return (
       <div className="flex flex-col items-center justify-center py-8 text-center">
         <MessageSquare size={28} className="text-white/30 mb-2" />
-        <p className="text-sm text-white/50">No negotiation started yet</p>
-        <button
-          onClick={handleStartNegotiation}
-          disabled={starting}
-          className="mt-3 flex items-center gap-1.5 px-4 py-2 bg-[#6A5CFF] text-white text-xs font-medium rounded-lg hover:bg-[#5a4def] transition-colors disabled:opacity-50"
-        >
-          <Plus size={13} /> {starting ? 'Starting...' : 'Start negotiation'}
-        </button>
+        {polling ? (
+          <>
+            <p className="text-sm text-white/50">Agent is drafting outreach email...</p>
+            <div className="mt-3 flex items-center gap-2 text-xs text-white/40">
+              <div className="w-3 h-3 border border-white/30 border-t-white/70 rounded-full animate-spin" />
+              Checking for response
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-white/50">No negotiation started yet</p>
+            <button
+              onClick={handleStartNegotiation}
+              disabled={starting}
+              className="mt-3 flex items-center gap-1.5 px-4 py-2 bg-[#6A5CFF] text-white text-xs font-medium rounded-lg hover:bg-[#5a4def] transition-colors disabled:opacity-50"
+            >
+              <Plus size={13} /> {starting ? 'Starting...' : 'Start negotiation'}
+            </button>
+          </>
+        )}
       </div>
     )
   }

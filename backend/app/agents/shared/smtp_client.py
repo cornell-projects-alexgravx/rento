@@ -38,20 +38,24 @@ def send_email(
     subject: str,
     body: str,
     attachments: list[tuple[str, bytes]] | None = None,
+    reply_to: str | None = None,
 ) -> None:
     """Send an email via SMTP. Reads SMTP_* env vars.
 
-    For local Mailhog: SMTP_HOST=mailhog, SMTP_PORT=1025, SMTP_USE_TLS=false
+    For local Mailpit: SMTP_HOST=mailpit, SMTP_PORT=1025, SMTP_USE_TLS=false
     For Gmail: SMTP_HOST=smtp.gmail.com, SMTP_PORT=587, SMTP_USE_TLS=true
 
-    The ``to`` address and ``subject`` are sanitized before being placed into
-    MIME headers to prevent email header injection attacks.
+    The ``to``, ``subject``, and ``reply_to`` are sanitized before being
+    placed into MIME headers to prevent email header injection attacks.
 
     Args:
         to: Recipient email address (sourced from DB, not user input).
         subject: Email subject line (may include Claude-generated text).
         body: Plain-text email body.
         attachments: Optional list of (filename, bytes) tuples to attach.
+        reply_to: Optional Reply-To address. Used by agent3 to encode the
+            match_id as a Gmail subaddress (e.g. agent+{match_id}@gmail.com)
+            so inbound host replies can be routed back to the right match.
     """
     host = SMTP_HOST
     port = SMTP_PORT
@@ -71,6 +75,8 @@ def send_email(
     msg["From"] = from_addr
     msg["To"] = safe_to
     msg["Subject"] = safe_subject
+    if reply_to:
+        msg["Reply-To"] = _sanitize_header(reply_to)
     msg.attach(MIMEText(body, "plain"))
 
     if attachments:

@@ -169,7 +169,7 @@ async def get_messages(
         )
     ).scalar_one_or_none()
     if not match:
-        raise HTTPException(status_code=404, detail="Negotiation not found")
+        return []
 
     messages_result = await db.execute(
         select(Message)

@@ -371,7 +371,7 @@ export const useStore = create<AppState>((set, get) => ({
 
   /* ── Listings ── */
   listings: mockListings,
-  selectedListingId: 'lst-001',
+  selectedListingId: null,
   setSelectedListing: (id) => set({ selectedListingId: id }),
   negotiationCart: ['lst-002', 'lst-003'],
   addToNegotiation: (id) =>

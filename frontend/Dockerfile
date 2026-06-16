@@ -11,6 +11,8 @@ COPY . .
 
 # Patch vite.config.ts to add server proxy and host binding so the Vite dev
 # server can be reached from Docker networking and proxy /api to the API container.
+# API_URL is a server-side env var (no VITE_ prefix) so it is NOT exposed to the
+# browser bundle — the browser always uses relative /api paths through this proxy.
 RUN cat > vite.config.ts << 'EOF'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -23,7 +25,7 @@ export default defineConfig({
     allowedHosts: true,
     proxy: {
       '/api': {
-        target: process.env.VITE_API_URL || 'http://localhost:8000',
+        target: process.env.API_URL || 'http://localhost:8000',
         changeOrigin: true,
       },
     },

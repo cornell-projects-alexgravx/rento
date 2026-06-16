@@ -32,7 +32,6 @@ services:
     env_file: .env
     environment:
       DATABASE_HOST: db
-      SMTP_HOST: mailpit
     ports:
       - "8000:8000"
     depends_on:
@@ -55,7 +54,7 @@ services:
     ports:
       - "5173:5173"
     environment:
-      - VITE_API_URL=http://api:8000
+      - API_URL=http://api:8000
     depends_on:
       api:
         condition: service_healthy

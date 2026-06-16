@@ -59,3 +59,18 @@ JWT_EXPIRE_HOURS: int = int(os.getenv("JWT_EXPIRE_HOURS", "168"))  # 7 days
 
 AGENT3_MAX_ROUNDS: int = int(os.getenv("AGENT3_MAX_NEGOTIATION_ROUNDS", "5"))
 AGENT3_POLL_INTERVAL_S: int = int(os.getenv("AGENT3_REPLY_POLL_INTERVAL_SECONDS", "1800"))
+
+# ── Gmail inbound reply polling ────────────────────────────────────────────────
+# If set, Reply-To headers use this address instead of SMTP_FROM.
+# Useful when sending via a non-Gmail SMTP (e.g. Cornell Office 365) but
+# receiving replies in a dedicated Gmail inbox.
+# Format: full email address, e.g. myagent@gmail.com
+REPLY_TO_BASE: str = os.getenv("REPLY_TO_BASE", "")
+
+
+# Path to OAuth credentials JSON downloaded from Google Cloud Console.
+GMAIL_CREDENTIALS_PATH: str = os.getenv("GMAIL_CREDENTIALS_PATH", "credentials.json")
+# Path where the OAuth token is persisted between restarts.
+GMAIL_TOKEN_PATH: str = os.getenv("GMAIL_TOKEN_PATH", "token.json")
+# How often (seconds) to poll Gmail for new host replies.
+GMAIL_REPLY_POLL_INTERVAL_S: int = int(os.getenv("GMAIL_REPLY_POLL_INTERVAL_SECONDS", "60"))

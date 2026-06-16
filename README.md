@@ -23,7 +23,8 @@ git clone https://github.com/cornell-projects-alexgravx/rento.git
 cd rento
 
 # 2. Configure environment
-cp .env.example .env
+mac: cp .env.example .env
+windows: copy .env.example .env
 # Edit .env
 # -> set ANTHROPIC_API_KEY
 # -> set POSTGRES_PASSWORD
